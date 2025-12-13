@@ -275,7 +275,7 @@ export default function App() {
   const progressPercent = Math.min(100, (gameState.enemiesDefeated / getEnemiesPerLevel(gameState.level)) * 100);
 
   return (
-    <div className="h-[100dvh] w-full bg-sky-300 overflow-hidden flex flex-col font-sans select-none relative">
+    <div className="h-screen w-full bg-sky-300 overflow-hidden flex flex-col font-sans select-none relative">
       
       {/* Background Decor */}
       <div className="absolute inset-0 pointer-events-none z-0">
@@ -307,7 +307,7 @@ export default function App() {
       </div>
 
       {/* Top Stats Bar */}
-      <div className="relative z-30 flex flex-col gap-2 p-4">
+      <div className="relative z-30 flex flex-col gap-2 p-2 md:p-4 shrink-0">
         <div className="flex justify-between items-center">
             <div className="flex items-center gap-2 bg-white/90 backdrop-blur rounded-full px-4 py-2 shadow-lg border-2 border-slate-200">
             <div className="bg-yellow-400 p-1 rounded-full"><Trophy size={20} className="text-yellow-900"/></div>
@@ -335,8 +335,8 @@ export default function App() {
       </div>
 
       {/* Game Area */}
-      <div className="flex-1 relative w-full max-w-7xl mx-auto flex flex-col z-10">
-        <div className="flex-1 relative flex items-end justify-center pb-8 md:pb-12"> 
+      <div className="flex-1 relative w-full max-w-7xl mx-auto flex flex-col z-10 min-h-0">
+        <div className="flex-1 relative flex items-end justify-center pb-4 md:pb-8"> 
             <Castle 
                 health={gameState.health} 
                 maxHealth={gameState.maxHealth} 
