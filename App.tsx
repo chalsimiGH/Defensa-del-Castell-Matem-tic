@@ -334,9 +334,9 @@ export default function App() {
         </div>
       </div>
 
-      {/* Game Area */}
+      {/* Game Area - INCREASED BOTTOM PADDING HERE (pb-12 md:pb-24) */}
       <div className="flex-1 relative w-full max-w-7xl mx-auto flex flex-col z-10 min-h-0">
-        <div className="flex-1 relative flex items-end justify-center pb-4 md:pb-8"> 
+        <div className="flex-1 relative flex items-end justify-center pb-12 md:pb-24"> 
             <Castle 
                 health={gameState.health} 
                 maxHealth={gameState.maxHealth} 

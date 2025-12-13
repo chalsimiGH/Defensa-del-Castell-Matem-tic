@@ -17,14 +17,16 @@ const getPathPosition = (progress: number) => {
   const t = (100 - progress) / 100;
 
   // Points (in percentage of container)
-  // Start (Bottom Right)
-  const P0 = { x: 100, y: 10 }; 
-  // Control Point 1 (Curve up/left)
-  const P1 = { x: 70, y: 10 };
-  // Control Point 2 (Curve 'S' shape)
-  const P2 = { x: 60, y: 40 };
-  // End (Castle Gate - Center Bottom)
-  const P3 = { x: 50, y: 28 };
+  // UPDATED: Lifted Y values (bottom %) to avoid control panel overlap
+  
+  // Start (Bottom Right) - lifted from 10 to 25
+  const P0 = { x: 100, y: 25 }; 
+  // Control Point 1 (Curve up/left) - lifted from 10 to 25
+  const P1 = { x: 70, y: 25 };
+  // Control Point 2 (Curve 'S' shape) - lifted from 40 to 50
+  const P2 = { x: 60, y: 50 };
+  // End (Castle Gate - Center Bottom) - lifted from 28 to 35 to match new castle position
+  const P3 = { x: 50, y: 35 };
 
   // Cubic Bezier Formula: (1-t)³P0 + 3(1-t)²tP1 + 3(1-t)t²P2 + t³P3
   const cx = Math.pow(1-t, 3)*P0.x + 3*Math.pow(1-t, 2)*t*P1.x + 3*(1-t)*Math.pow(t, 2)*P2.x + Math.pow(t, 3)*P3.x;
