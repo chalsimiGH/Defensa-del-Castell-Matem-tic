@@ -70,8 +70,8 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
 
         {/* Controls Grid */}
         <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-2 md:gap-3">
-            {/* Number Pad - Compacted buttons */}
-            <div className="flex flex-wrap gap-2 md:gap-2 justify-center md:justify-start bg-slate-800 p-2 md:p-3 rounded-xl border md:border-2 border-slate-700">
+            {/* Number Pad - Compacted buttons using gap-1 on mobile to fit more in one row */}
+            <div className="flex flex-wrap gap-1 md:gap-2 justify-center md:justify-start bg-slate-800 p-2 md:p-3 rounded-xl border md:border-2 border-slate-700">
                 {availableButtons.map((num) => (
                     <button
                         key={num}
@@ -83,8 +83,8 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
                 ))}
             </div>
 
-            {/* Operators & Actions - Compacted buttons */}
-            <div className="flex flex-wrap gap-2 md:gap-2 justify-center bg-slate-800 p-2 md:p-3 rounded-xl border md:border-2 border-slate-700">
+            {/* Operators & Actions - Compacted buttons using gap-1 on mobile */}
+            <div className="flex flex-wrap gap-1 md:gap-2 justify-center bg-slate-800 p-2 md:p-3 rounded-xl border md:border-2 border-slate-700">
                  {allowedOperators.map((op) => (
                     <button
                         key={op}

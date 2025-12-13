@@ -275,7 +275,8 @@ export default function App() {
   const progressPercent = Math.min(100, (gameState.enemiesDefeated / getEnemiesPerLevel(gameState.level)) * 100);
 
   return (
-    <div className="h-screen w-full bg-sky-300 overflow-hidden flex flex-col font-sans select-none relative">
+    // UPDATED: 'fixed inset-0 h-[100dvh]' prevents scrolling and respects mobile address bars
+    <div className="fixed inset-0 w-full h-[100dvh] bg-sky-300 overflow-hidden flex flex-col font-sans select-none">
       
       {/* Background Decor */}
       <div className="absolute inset-0 pointer-events-none z-0">
