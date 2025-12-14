@@ -8,7 +8,7 @@ import { Shop } from './components/Shop';
 import { GameState, Enemy, EquationItem, Operator, ShopItem, EnemyType } from './types';
 import { INITIAL_HEALTH, getDifficultyConfig, ENEMY_TYPES } from './constants';
 import { evaluateEquation, generateTargetNumber } from './utils/mathEngine';
-import { Trophy, RotateCcw, ShoppingBag, ArrowRight, Star, Volume2, VolumeX, Music } from 'lucide-react';
+import { Trophy, RotateCcw, ShoppingBag, ArrowRight, Star, Volume2, VolumeX, Music, Bird } from 'lucide-react';
 
 // --- RETRO BACKGROUND HELPERS ---
 
@@ -22,6 +22,19 @@ const PixelCloud = ({ className, delay = 0 }: { className?: string, delay?: numb
         <div className="absolute -top-4 left-8 w-10 h-10 bg-white"></div>
         <div className="absolute top-2 left-2 w-12 h-4 bg-white"></div>
      </div>
+  </div>
+);
+
+const PixelBird = ({ delay = 0, yPos = 20 }: { delay: number, yPos: number }) => (
+  <div 
+    className="absolute -left-10 animate-[float-slow_20s_linear_infinite]"
+    style={{ top: `${yPos}%`, animationDelay: `-${delay}s` }}
+  >
+    <div className="flex gap-1 animate-pulse">
+        <div className="w-2 h-1 bg-black/50"></div>
+        <div className="w-3 h-1 bg-black/50 mt-1"></div>
+        <div className="w-2 h-1 bg-black/50"></div>
+    </div>
   </div>
 );
 
@@ -501,6 +514,10 @@ export default function App() {
         <PixelCloud className="top-20 -left-20" delay={0} />
         <PixelCloud className="top-40 -left-40 scale-75" delay={1} />
         <PixelCloud className="top-10 -left-10 scale-50 opacity-50" delay={2} />
+
+        {/* Pixel Birds - NEW */}
+        <PixelBird delay={0} yPos={25} />
+        <PixelBird delay={8} yPos={15} />
 
         {/* 8-Bit Mountains */}
         <PixelMountain />

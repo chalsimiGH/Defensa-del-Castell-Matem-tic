@@ -11,53 +11,51 @@ interface CastleProps {
   isAttacking?: boolean; // New prop for animation
 }
 
-// New Pixel Art Dragon Component
+// Improved Pixel Art Dragon Component
 const PixelDragon = () => {
   return (
-    <div className="absolute -top-16 left-1/2 -translate-x-1/2 z-30 animate-wiggle scale-110 md:scale-125" style={{ animationDuration: '3s' }}>
+    <div className="absolute -top-24 left-1/2 -translate-x-1/2 z-50 animate-wiggle scale-150 origin-bottom" style={{ animationDuration: '3s' }}>
         {/* Shadow */}
-        <div className="absolute -bottom-2 left-2 w-16 h-4 bg-black/30 rounded-full blur-sm"></div>
+        <div className="absolute bottom-0 left-4 w-12 h-3 bg-black/20 rounded-full blur-md"></div>
         
         <div className="relative w-20 h-20">
-            {/* Left Wing (Animated) */}
-            <div className="absolute top-2 -left-4 w-8 h-8 origin-bottom-right animate-[pulse_1s_ease-in-out_infinite]">
-                 <div className="w-8 h-2 bg-red-700 absolute top-0"></div>
-                 <div className="w-6 h-2 bg-red-700 absolute top-2 left-2"></div>
-                 <div className="w-4 h-2 bg-red-700 absolute top-4 left-4"></div>
+            {/* Wings (Large and flapping) */}
+            <div className="absolute top-4 -left-6 w-10 h-6 origin-bottom-right animate-[pulse_0.8s_ease-in-out_infinite]">
+                 <div className="w-full h-full bg-red-700 rounded-tl-3xl border-2 border-red-900"></div>
+                 <div className="w-8 h-4 bg-red-600 absolute bottom-0 left-0"></div>
             </div>
 
-            {/* Right Wing (Animated) */}
-             <div className="absolute top-2 -right-4 w-8 h-8 origin-bottom-left animate-[pulse_1s_ease-in-out_infinite]" style={{ transform: 'scaleX(-1)' }}>
-                 <div className="w-8 h-2 bg-red-700 absolute top-0"></div>
-                 <div className="w-6 h-2 bg-red-700 absolute top-2 left-2"></div>
-                 <div className="w-4 h-2 bg-red-700 absolute top-4 left-4"></div>
+             <div className="absolute top-4 -right-6 w-10 h-6 origin-bottom-left animate-[pulse_0.8s_ease-in-out_infinite]" style={{ transform: 'scaleX(-1)' }}>
+                 <div className="w-full h-full bg-red-700 rounded-tl-3xl border-2 border-red-900"></div>
+                 <div className="w-8 h-4 bg-red-600 absolute bottom-0 left-0"></div>
             </div>
 
-            {/* Body */}
-            <div className="absolute bottom-4 left-4 w-12 h-10 bg-green-600"></div>
-            <div className="absolute bottom-4 left-4 w-12 h-2 bg-yellow-400 opacity-50"></div> {/* Belly */}
+            {/* Body (Thicker) */}
+            <div className="absolute bottom-4 left-5 w-10 h-12 bg-green-700 rounded-b-xl border-x-2 border-green-900"></div>
+            <div className="absolute bottom-4 left-6 w-8 h-10 bg-yellow-400/80 rounded-b-lg"></div> {/* Belly */}
             
             {/* Tail */}
-            <div className="absolute bottom-2 -left-2 w-6 h-4 bg-green-600"></div>
-            <div className="absolute bottom-4 -left-4 w-4 h-4 bg-green-600"></div>
-            <div className="absolute bottom-6 -left-6 w-4 h-4 bg-red-500"></div> {/* Tail Tip */}
+            <div className="absolute bottom-2 left-2 w-8 h-3 bg-green-700 rotate-12"></div>
+            <div className="absolute bottom-4 -left-2 w-4 h-4 bg-red-600 rotate-45"></div> {/* Tail Tip */}
 
-            {/* Head */}
-            <div className="absolute top-2 left-6 w-10 h-10 bg-green-600">
+            {/* Head (More dragon-like shape) */}
+            <div className="absolute top-0 left-4 w-12 h-10 bg-green-600 rounded-md border-2 border-green-800">
                 {/* Eye */}
-                <div className="absolute top-2 left-2 w-2 h-4 bg-yellow-300">
-                    <div className="w-1 h-2 bg-black absolute bottom-0 right-0"></div>
+                <div className="absolute top-2 left-2 w-3 h-3 bg-yellow-300 border border-black overflow-hidden">
+                    <div className="w-1 h-3 bg-black absolute top-0 left-1"></div>
                 </div>
                 {/* Snout */}
-                <div className="absolute top-4 -right-2 w-4 h-6 bg-green-600"></div>
+                <div className="absolute top-3 -right-2 w-6 h-6 bg-green-600 rounded-r-md border-y-2 border-r-2 border-green-800">
+                    <div className="absolute top-1 right-2 w-1 h-1 bg-black rounded-full"></div>
+                </div>
                 {/* Horns */}
-                <div className="absolute -top-2 left-0 w-2 h-4 bg-white"></div>
-                <div className="absolute -top-2 left-6 w-2 h-4 bg-white"></div>
+                <div className="absolute -top-3 left-1 w-2 h-4 bg-white border border-slate-300"></div>
+                <div className="absolute -top-3 left-7 w-2 h-4 bg-white border border-slate-300"></div>
             </div>
              
-             {/* Smoke Breath */}
-             <div className="absolute top-6 -right-6 flex animate-pulse opacity-80">
-                 <Cloud size={16} className="text-slate-400 fill-slate-300" />
+             {/* Fire Breath Animation */}
+             <div className="absolute top-6 -right-8 flex animate-pulse opacity-0 group-hover:opacity-100" style={{ animation: 'pulse 2s infinite' }}>
+                 <Flame size={20} className="text-orange-500 fill-yellow-400 rotate-90" />
              </div>
         </div>
     </div>
@@ -98,28 +96,18 @@ export const Castle: React.FC<CastleProps> = ({ health, maxHealth, isShaking, st
   const RenderCannon = ({ side }: { side: 'left' | 'right' }) => {
     // Rotation based on side
     const rotation = side === 'left' ? '-rotate-45' : 'rotate-45';
-    // Recoil animation transform. Push 'back' relative to angle.
-    // Left cannon (pointed left-up): needs to move right-down to recoil.
-    // Right cannon (pointed right-up): needs to move left-down to recoil.
+    // Recoil animation transform
     const recoilClass = isAttacking 
         ? (side === 'left' ? 'translate-x-2 translate-y-2' : '-translate-x-2 translate-y-2') 
         : '';
     
     return (
         <div className={`absolute -top-8 ${side === 'left' ? '-left-6' : '-right-6'} z-20 transition-transform duration-75 ease-out ${recoilClass}`}>
-            {/* Wooden Base/Wheel */}
             <div className={`absolute bottom-0 ${side === 'left' ? 'right-1' : 'left-1'} w-5 h-5 bg-amber-900 rounded-full border-4 border-slate-800 shadow-md z-10`}></div>
-            
-            {/* Cannon Barrel - 3D Gradient */}
             <div className={`relative w-8 h-16 bg-gradient-to-r from-slate-900 via-slate-600 to-slate-800 border-2 border-slate-900 rounded-t-sm rounded-b-lg ${rotation} shadow-2xl flex flex-col items-center justify-between py-1 overflow-visible`}>
-                 {/* Reinforcement Rings */}
                  <div className="w-full h-1 bg-slate-950/50 shadow-sm"></div>
                  <div className="w-full h-1 bg-slate-950/50 shadow-sm mt-auto mb-2"></div>
-                 
-                 {/* Muzzle Opening (Black Hole) */}
                  <div className="absolute -top-1 w-6 h-3 bg-black rounded-[100%] border border-slate-700 shadow-[inset_0_2px_4px_rgba(0,0,0,1)]"></div>
-
-                 {/* Muzzle Flash & Smoke (Conditional) */}
                  {isAttacking && (
                     <div className="absolute -top-10 w-full flex flex-col items-center animate-pulse">
                         <div className="relative">
@@ -159,16 +147,18 @@ export const Castle: React.FC<CastleProps> = ({ health, maxHealth, isShaking, st
                 <Waves size={24} className="md:w-8 md:h-8" /> <Waves size={24} className="md:w-8 md:h-8" /> <Waves size={24} className="md:w-8 md:h-8" />
              </div>
              
-             {/* Gator Decoration */}
+             {/* Gator Decoration - Blinking Eyes */}
              {style.decorations.includes('gators') && (
                 <>
                   <div className="absolute left-[20%] top-2 animate-bounce" style={{ animationDuration: '4s' }}>
-                      <div className="w-8 h-2 bg-green-700 rounded-full"></div>
-                      <div className="absolute -top-1 left-2 w-1.5 h-1.5 bg-yellow-400 rounded-full border border-black"></div>
+                      <div className="w-10 h-3 bg-green-800 rounded-full shadow-sm"></div>
+                      <div className="absolute -top-1 left-2 w-2 h-2 bg-yellow-400 rounded-full border border-black animate-[pulse_3s_infinite]"></div>
+                      <div className="absolute -top-1 left-6 w-2 h-2 bg-yellow-400 rounded-full border border-black animate-[pulse_3s_infinite]"></div>
                   </div>
                   <div className="absolute right-[20%] top-4 animate-bounce" style={{ animationDuration: '3s' }}>
-                      <div className="w-8 h-2 bg-green-700 rounded-full"></div>
-                      <div className="absolute -top-1 left-4 w-1.5 h-1.5 bg-yellow-400 rounded-full border border-black"></div>
+                      <div className="w-10 h-3 bg-green-800 rounded-full shadow-sm"></div>
+                      <div className="absolute -top-1 left-2 w-2 h-2 bg-yellow-400 rounded-full border border-black animate-[pulse_2.5s_infinite]"></div>
+                      <div className="absolute -top-1 left-6 w-2 h-2 bg-yellow-400 rounded-full border border-black animate-[pulse_2.5s_infinite]"></div>
                   </div>
                 </>
              )}
@@ -188,9 +178,9 @@ export const Castle: React.FC<CastleProps> = ({ health, maxHealth, isShaking, st
         
         {/* Wizard Crystal Decoration - Placed on Back Tower Right */}
         {style.decorations.includes('crystal') && (
-            <div className="absolute bottom-[200px] -right-4 z-40 animate-[bounce_4s_infinite]">
-                 <div className="w-8 h-12 bg-cyan-400 rotate-45 border-2 border-white opacity-80 shadow-[0_0_20px_cyan]"></div>
-                 <div className="absolute inset-0 w-8 h-12 bg-cyan-200 rotate-45 border-2 border-white opacity-50 blur-sm"></div>
+            <div className="absolute bottom-[160px] md:bottom-[200px] -right-2 md:-right-4 z-40 animate-[bounce_4s_infinite]">
+                 <div className="w-10 h-14 bg-cyan-400 rotate-45 border-2 border-white opacity-90 shadow-[0_0_25px_cyan]"></div>
+                 <div className="absolute inset-0 w-10 h-14 bg-cyan-200 rotate-45 border-2 border-white opacity-60 blur-md animate-pulse"></div>
             </div>
         )}
 
@@ -205,9 +195,11 @@ export const Castle: React.FC<CastleProps> = ({ health, maxHealth, isShaking, st
              
              {/* Banners Decoration Left */}
              {style.decorations.includes('banners') && (
-                <div className="absolute top-24 md:top-32 w-8 md:w-12 h-20 md:h-32 bg-red-700 border-x-2 border-red-900 shadow-sm flex flex-col items-center">
-                    <div className="w-full h-full border-b-[20px] border-b-transparent border-l-[16px] border-l-red-700 border-r-[16px] border-r-red-700 md:border-l-[24px] md:border-r-[24px]"></div>
-                    <div className="absolute top-2 w-4 h-4 rounded-full bg-yellow-400 border border-yellow-600"></div>
+                <div className="absolute top-24 md:top-32 w-10 md:w-14 h-24 md:h-36 bg-red-700 border-x-2 border-red-900 shadow-lg flex flex-col items-center origin-top animate-wiggle" style={{ animationDuration: '3s' }}>
+                    <div className="w-full h-full border-b-[20px] border-b-transparent border-l-[18px] border-l-red-700 border-r-[18px] border-r-red-700 md:border-l-[26px] md:border-r-[26px]"></div>
+                    <div className="absolute top-4 w-6 h-6 rounded-full bg-yellow-400 border-2 border-yellow-600 shadow-sm flex items-center justify-center">
+                        <div className="w-2 h-2 bg-yellow-600 rounded-full"></div>
+                    </div>
                 </div>
              )}
 
@@ -229,9 +221,11 @@ export const Castle: React.FC<CastleProps> = ({ health, maxHealth, isShaking, st
              
              {/* Banners Decoration Right */}
              {style.decorations.includes('banners') && (
-                <div className="absolute top-24 md:top-32 w-8 md:w-12 h-20 md:h-32 bg-red-700 border-x-2 border-red-900 shadow-sm flex flex-col items-center">
-                     <div className="w-full h-full border-b-[20px] border-b-transparent border-l-[16px] border-l-red-700 border-r-[16px] border-r-red-700 md:border-l-[24px] md:border-r-[24px]"></div>
-                     <div className="absolute top-2 w-4 h-4 rounded-full bg-yellow-400 border border-yellow-600"></div>
+                <div className="absolute top-24 md:top-32 w-10 md:w-14 h-24 md:h-36 bg-red-700 border-x-2 border-red-900 shadow-lg flex flex-col items-center origin-top animate-wiggle" style={{ animationDuration: '2.5s' }}>
+                     <div className="w-full h-full border-b-[20px] border-b-transparent border-l-[18px] border-l-red-700 border-r-[18px] border-r-red-700 md:border-l-[26px] md:border-r-[26px]"></div>
+                     <div className="absolute top-4 w-6 h-6 rounded-full bg-yellow-400 border-2 border-yellow-600 shadow-sm flex items-center justify-center">
+                         <div className="w-2 h-2 bg-yellow-600 rounded-full"></div>
+                     </div>
                 </div>
              )}
 
@@ -261,12 +255,10 @@ export const Castle: React.FC<CastleProps> = ({ health, maxHealth, isShaking, st
            
            {/* Spikes Decoration */}
            {style.decorations.includes('spikes') && (
-              <div className="absolute top-0 w-full flex justify-between px-1">
-                 <div className="w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[16px] border-b-slate-800"></div>
-                 <div className="w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[16px] border-b-slate-800"></div>
-                 <div className="w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[16px] border-b-slate-800"></div>
-                 <div className="w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[16px] border-b-slate-800"></div>
-                 <div className="w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[16px] border-b-slate-800"></div>
+              <div className="absolute -top-4 w-[110%] flex justify-between px-1 z-30">
+                 {[...Array(6)].map((_, i) => (
+                    <div key={i} className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-b-[20px] border-b-slate-800"></div>
+                 ))}
               </div>
            )}
 
