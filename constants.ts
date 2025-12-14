@@ -62,11 +62,12 @@ export const SHOP_ITEMS: ShopItem[] = [
   { id: 'flag_pirate', name: 'Pirata', type: 'flagType', value: 'pirate', cost: 30, icon: null },
 
   // Decorations (Now tiered)
+  // UPDATED: Cannons are now FREE and Default. 'None' costs 0 too but isn't default.
+  { id: 'deco_cannons', name: 'Canons de Defensa', type: 'decoration', value: 'cannons', cost: 0, icon: null },
   { id: 'deco_none', name: 'Sense Decoració', type: 'decoration', value: 'none', cost: 0, icon: null },
   { id: 'deco_vines', name: 'Enfiladisses', type: 'decoration', value: 'vines', cost: 10, icon: null },
   { id: 'deco_garden', name: 'Jardí Reial', type: 'decoration', value: 'garden', cost: 20, icon: null },
   { id: 'deco_torches', name: 'Torxes Màgiques', type: 'decoration', value: 'torches', cost: 35, icon: null },
   { id: 'deco_statues', name: 'Estàtues Guardians', type: 'decoration', value: 'statues', cost: 50, icon: null },
-  { id: 'deco_cannons', name: 'Canons de Defensa', type: 'decoration', value: 'cannons', cost: 70, icon: null },
   { id: 'deco_dragon', name: 'Drac Mascota', type: 'decoration', value: 'dragon', cost: 150, icon: null },
 ];

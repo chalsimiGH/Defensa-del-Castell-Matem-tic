@@ -24,22 +24,26 @@ export const Castle: React.FC<CastleProps> = ({ health, maxHealth, isShaking, st
   
   const shadeClass = getShade(wallColor);
 
-  // Updated Flag Rendering to match Shop Visuals
+  // Updated Flag Rendering logic
   const renderFlag = (defaultColorClass: string) => {
+    // Force specific colors based on flagType to ensure visibility on all backgrounds
     if (style.flagType === 'pirate') {
       return (
-        <div className="relative">
-            <Flag size={28} className="text-slate-950 fill-slate-900 drop-shadow-sm" />
+        <div className="relative drop-shadow-md">
+            <Flag size={28} className="text-slate-950 fill-slate-900" />
             {/* Skull hint */}
-            <div className="absolute top-1 left-2 w-2 h-2 bg-white/80 rounded-full"></div>
+            <div className="absolute top-1 left-2 w-2 h-2 bg-white/90 rounded-full shadow-sm"></div>
+            {/* Outline hint via drop-shadow in container or border simulation if needed */}
         </div>
       );
     }
     if (style.flagType === 'royal') {
-      return <Flag size={28} className="text-purple-700 fill-yellow-400 drop-shadow-sm" />;
+      // Royal needs to pop against dark slate. Using a lighter purple stroke or glowing effect helps.
+      return <Flag size={28} className="text-purple-600 fill-yellow-400 drop-shadow-[0_0_2px_rgba(255,255,255,0.8)]" />;
     }
-    // Classic (Team Colors)
-    return <Flag size={28} fill="currentColor" className={defaultColorClass} />;
+    
+    // Classic (Team Colors) - Ensure good contrast
+    return <Flag size={28} fill="currentColor" className={`${defaultColorClass} drop-shadow-sm`} />;
   };
 
   return (

@@ -20,11 +20,13 @@ export default function App() {
     health: INITIAL_HEALTH,
     maxHealth: INITIAL_HEALTH,
     currency: 0,
-    unlockedItems: ['color_slate', 'flag_classic', 'deco_none'],
+    // UPDATED: Start with cannons unlocked
+    unlockedItems: ['color_slate', 'flag_classic', 'deco_cannons', 'deco_none'],
     castleStyle: {
       wallColor: 'bg-slate-400',
       flagType: 'classic',
-      decoration: 'none'
+      // UPDATED: Start with cannons equipped
+      decoration: 'cannons'
     }
   });
 
@@ -95,7 +97,12 @@ export default function App() {
       setGameState(prev => ({
         ...prev,
         currency: prev.currency - item.cost,
-        unlockedItems: [...prev.unlockedItems, item.id]
+        unlockedItems: [...prev.unlockedItems, item.id],
+        // UPDATED: Auto-equip the item upon purchase for instant feedback
+        castleStyle: {
+            ...prev.castleStyle,
+            [item.type]: item.value
+        }
       }));
     }
   };
