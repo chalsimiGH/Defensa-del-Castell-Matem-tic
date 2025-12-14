@@ -8,7 +8,7 @@ import { Shop } from './components/Shop';
 import { GameState, Enemy, EquationItem, Operator, ShopItem, EnemyType } from './types';
 import { INITIAL_HEALTH, getDifficultyConfig, ENEMY_TYPES } from './constants';
 import { evaluateEquation, generateTargetNumber } from './utils/mathEngine';
-import { Zap, Trophy, RotateCcw, ShoppingBag, ArrowRight, Star } from 'lucide-react';
+import { Zap, Trophy, RotateCcw, ShoppingBag, ArrowRight, Star, Volume2, VolumeX, Music } from 'lucide-react';
 
 export default function App() {
   // Game State
@@ -34,7 +34,18 @@ export default function App() {
   const [equation, setEquation] = useState<EquationItem[]>([]);
   const [evaluatedResult, setEvaluatedResult] = useState<number | null>(null);
   const [castleShaking, setCastleShaking] = useState(false);
+  const [isAttacking, setIsAttacking] = useState(false);
   const [feedbackEffect, setFeedbackEffect] = useState<{ x: number, text: string, type: 'hit' | 'miss' } | null>(null);
+  
+  // Audio State
+  const [isMusicMuted, setIsMusicMuted] = useState(false);
+  const [isSfxMuted, setIsSfxMuted] = useState(false);
+  
+  const musicRef = useRef<HTMLAudioElement>(null);
+  const sfxRef = useRef<HTMLAudioElement>(null);
+  
+  // Track if game has started to allow autoplay after interaction
+  const [hasStarted, setHasStarted] = useState(false); 
 
   // Constants for level progression
   const getEnemiesPerLevel = (level: number) => 5 + (level * 2);
@@ -43,6 +54,27 @@ export default function App() {
   const lastUpdateRef = useRef<number>(0);
   const animationFrameRef = useRef<number>(0);
   const nextSpawnTimeRef = useRef<number>(0);
+
+  // Background Music Logic
+  useEffect(() => {
+    if (musicRef.current) {
+        musicRef.current.volume = 0.3; // Set background volume to 30%
+        if (hasStarted && !isMusicMuted) {
+            musicRef.current.play().catch(e => console.log("Audio play failed:", e));
+        } else {
+            musicRef.current.pause();
+        }
+    }
+  }, [hasStarted, isMusicMuted]);
+
+  // SFX Helper
+  const playHitSound = () => {
+    if (!isSfxMuted && sfxRef.current) {
+        sfxRef.current.currentTime = 0;
+        sfxRef.current.volume = 0.5;
+        sfxRef.current.play().catch(e => console.log("SFX play failed:", e));
+    }
+  };
 
   // Transitions
   const enterShop = () => {
@@ -76,6 +108,7 @@ export default function App() {
   };
 
   const startGame = () => {
+    setHasStarted(true); // Enable music
     setGameState(prev => ({
       ...prev,
       phase: 'playing',
@@ -149,15 +182,29 @@ export default function App() {
   const handleAttack = () => {
     if (evaluatedResult === null) return;
 
-    const sortedEnemies = [...enemies].sort((a, b) => a.x - b.x);
+    // Filter out already dying or attacking enemies from being targeted
+    const activeEnemies = [...enemies].filter(e => e.status === 'walking');
+    const sortedEnemies = activeEnemies.sort((a, b) => a.x - b.x);
     const targetIndex = sortedEnemies.findIndex(e => e.value === evaluatedResult);
 
     if (targetIndex !== -1) {
       // HIT!
       const target = sortedEnemies[targetIndex];
+      playHitSound(); // Trigger SFX
+
       setFeedbackEffect({ x: target.x, text: '💥', type: 'hit' });
       setTimeout(() => setFeedbackEffect(null), 500);
-      setEnemies(prev => prev.filter(e => e.id !== target.id));
+      
+      // Trigger Cannon Animation
+      setIsAttacking(true);
+      setTimeout(() => setIsAttacking(false), 200);
+
+      // Update Enemy Status to 'dying' instead of removing immediately
+      setEnemies(prev => prev.map(e => 
+        e.id === target.id 
+          ? { ...e, status: 'dying', animationStartTime: performance.now() } 
+          : e
+      ));
       
       setGameState(prev => {
         const newScore = prev.score + (prev.level * 10);
@@ -224,7 +271,9 @@ export default function App() {
 
     // Stop spawning if we are close to finishing level to let user clear screen
     const enemiesTarget = getEnemiesPerLevel(gameState.level);
-    const enemiesRemainingToSpawn = enemiesTarget - gameState.enemiesDefeated - enemies.length;
+    // Count active and defeated enemies to know if we need more
+    const activeAndDefeatedCount = gameState.enemiesDefeated + enemies.filter(e => e.status !== 'dying').length;
+    const enemiesRemainingToSpawn = enemiesTarget - activeAndDefeatedCount;
 
     if (canSpawn && enemiesRemainingToSpawn > 0) {
       const newVal = generateTargetNumber(difficulty.numberRange.min, difficulty.numberRange.max);
@@ -237,23 +286,52 @@ export default function App() {
         x: 100, 
         speed: ENEMY_TYPES[type].speed * difficulty.enemySpeedBase,
         maxHealth: 1,
+        status: 'walking',
+        animationStartTime: 0
       };
 
       setEnemies(prev => [...prev, newEnemy]);
       nextSpawnTimeRef.current = timestamp + difficulty.spawnRate + (Math.random() * 1000 - 500);
     }
 
-    // 2. Movement
+    // 2. Movement & Animations
     setEnemies(prevEnemies => {
       const nextEnemies: Enemy[] = [];
       let damageTaken = 0;
+      const now = performance.now();
 
       prevEnemies.forEach(enemy => {
-        const moveAmount = (enemy.speed * deltaTime) / 16; 
+        // Handle Dying Animation
+        if (enemy.status === 'dying') {
+            // Keep for 500ms to show animation
+            if (now - (enemy.animationStartTime || 0) < 500) {
+                nextEnemies.push(enemy);
+            }
+            return;
+        }
+
+        // Handle Attacking Animation
+        if (enemy.status === 'attacking') {
+             // Keep for 300ms to show attack impact
+             if (now - (enemy.animationStartTime || 0) < 300) {
+                nextEnemies.push(enemy);
+             }
+             return;
+        }
+
+        // Handle Walking
+        const moveAmount = (enemy.speed * deltaTime) / 16;
         const newX = enemy.x - moveAmount;
 
         if (newX <= 0) {
+          // Trigger Attack
           damageTaken += 20; 
+          nextEnemies.push({
+              ...enemy,
+              x: 0,
+              status: 'attacking',
+              animationStartTime: now
+          });
         } else {
           nextEnemies.push({ ...enemy, x: newX });
         }
@@ -285,6 +363,13 @@ export default function App() {
     // UPDATED: 'fixed inset-0 h-[100dvh]' prevents scrolling and respects mobile address bars
     <div className="fixed inset-0 w-full h-[100dvh] bg-sky-300 overflow-hidden flex flex-col font-sans select-none">
       
+      {/* Background Music */}
+      {/* Royalty free 8-bit loop */}
+      <audio ref={musicRef} loop src="https://ia800104.us.archive.org/18/items/8-bit-loop/8-bit-loop.mp3" />
+      
+      {/* Attack SFX */}
+      <audio ref={sfxRef} src="https://ia902302.us.archive.org/19/items/8-bit-sfx-pack/12_Explosion_02.mp3" />
+
       {/* Background Decor */}
       <div className="absolute inset-0 pointer-events-none z-0">
         <div className="absolute top-10 left-20 text-white/40 animate-pulse"><Zap size={64} /></div>
@@ -317,23 +402,46 @@ export default function App() {
       {/* Top Stats Bar */}
       <div className="relative z-30 flex flex-col gap-2 p-2 md:p-4 shrink-0">
         <div className="flex justify-between items-center">
+            {/* Score */}
             <div className="flex items-center gap-2 bg-white/90 backdrop-blur rounded-full px-4 py-2 shadow-lg border-2 border-slate-200">
-            <div className="bg-yellow-400 p-1 rounded-full"><Trophy size={20} className="text-yellow-900"/></div>
-            <span className="font-bold text-slate-800 text-lg">{gameState.score}</span>
+                <div className="bg-yellow-400 p-1 rounded-full"><Trophy size={20} className="text-yellow-900"/></div>
+                <span className="font-bold text-slate-800 text-lg">{gameState.score}</span>
             </div>
             
+            {/* Level */}
             <div className="flex items-center gap-2 bg-indigo-600/90 text-white rounded-full px-4 py-2 shadow-lg border-2 border-indigo-400">
-            <span className="font-bold uppercase text-sm">Nivell</span>
-            <span className="font-bold text-xl">{gameState.level}</span>
+                <span className="font-bold uppercase text-sm">Nivell</span>
+                <span className="font-bold text-xl">{gameState.level}</span>
             </div>
 
-            <button 
-            onClick={enterShop}
-            className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white rounded-full px-4 py-2 shadow-lg font-bold border-2 border-blue-400 transition-transform active:scale-95"
-            >
-            <span>💎 {gameState.currency}</span>
-            <ShoppingBag size={18} />
-            </button>
+            <div className="flex gap-2">
+                {/* Music Toggle */}
+                <button
+                    onClick={() => setIsMusicMuted(!isMusicMuted)}
+                    className={`flex items-center justify-center rounded-full w-10 h-10 md:w-auto md:h-auto md:px-4 md:py-2 shadow-lg font-bold border-2 transition-transform active:scale-95 ${isMusicMuted ? 'bg-slate-200 text-slate-400 border-slate-300' : 'bg-white/90 hover:bg-white text-pink-600 border-pink-200'}`}
+                    title="Música"
+                >
+                    {isMusicMuted ? <Music size={20} className="opacity-50" /> : <Music size={20} />}
+                </button>
+
+                {/* SFX Toggle */}
+                <button
+                    onClick={() => setIsSfxMuted(!isSfxMuted)}
+                    className={`flex items-center justify-center rounded-full w-10 h-10 md:w-auto md:h-auto md:px-4 md:py-2 shadow-lg font-bold border-2 transition-transform active:scale-95 ${isSfxMuted ? 'bg-slate-200 text-slate-400 border-slate-300' : 'bg-white/90 hover:bg-white text-blue-600 border-blue-200'}`}
+                    title="Efectes de so"
+                >
+                    {isSfxMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+                </button>
+
+                {/* Shop Button */}
+                <button 
+                    onClick={enterShop}
+                    className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white rounded-full px-4 py-2 shadow-lg font-bold border-2 border-blue-400 transition-transform active:scale-95"
+                >
+                    <span>💎 {gameState.currency}</span>
+                    <ShoppingBag size={18} />
+                </button>
+            </div>
         </div>
         
         {/* Level Progress Bar */}
@@ -358,6 +466,7 @@ export default function App() {
                   maxHealth={gameState.maxHealth} 
                   isShaking={castleShaking}
                   style={gameState.castleStyle}
+                  isAttacking={isAttacking}
               />
             </div>
             

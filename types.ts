@@ -2,6 +2,7 @@ import React from 'react';
 
 export type Operator = '+' | '-' | '×' | '÷';
 export type EnemyType = 'goblin' | 'orc' | 'dragon' | 'skeleton' | 'golem' | 'slime';
+export type EnemyStatus = 'walking' | 'attacking' | 'dying';
 
 export interface Enemy {
   id: string;
@@ -10,6 +11,8 @@ export interface Enemy {
   x: number; // Progress percentage (100 = start, 0 = castle gate)
   speed: number;
   maxHealth: number; 
+  status: EnemyStatus;
+  animationStartTime?: number;
 }
 
 export type GamePhase = 'tutorial' | 'playing' | 'level_complete' | 'shop' | 'gameover';

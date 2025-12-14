@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldAlert, Flag, Flame, Flower, Waves, Bird, Shield } from 'lucide-react';
+import { ShieldAlert, Flag, Flame, Flower, Waves, Bird, Shield, Cloud, Star } from 'lucide-react';
 import { CastleStyle } from '../types';
 
 interface CastleProps {
@@ -7,13 +7,13 @@ interface CastleProps {
   maxHealth: number;
   isShaking: boolean;
   style: CastleStyle;
+  isAttacking?: boolean; // New prop for animation
 }
 
-export const Castle: React.FC<CastleProps> = ({ health, maxHealth, isShaking, style }) => {
+export const Castle: React.FC<CastleProps> = ({ health, maxHealth, isShaking, style, isAttacking = false }) => {
   const healthPercent = (health / maxHealth) * 100;
   const wallColor = style.wallColor;
   
-  // Create derived colors for shading
   const getShade = (base: string) => {
     if (base.includes('slate-400')) return 'bg-slate-600 border-slate-700';
     if (base.includes('amber-200')) return 'bg-amber-400 border-amber-600';
@@ -24,26 +24,59 @@ export const Castle: React.FC<CastleProps> = ({ health, maxHealth, isShaking, st
   
   const shadeClass = getShade(wallColor);
 
-  // Updated Flag Rendering logic
   const renderFlag = (defaultColorClass: string) => {
-    // Force specific colors based on flagType to ensure visibility on all backgrounds
     if (style.flagType === 'pirate') {
       return (
         <div className="relative drop-shadow-md">
             <Flag size={28} className="text-slate-950 fill-slate-900" />
-            {/* Skull hint */}
             <div className="absolute top-1 left-2 w-2 h-2 bg-white/90 rounded-full shadow-sm"></div>
-            {/* Outline hint via drop-shadow in container or border simulation if needed */}
         </div>
       );
     }
     if (style.flagType === 'royal') {
-      // Royal needs to pop against dark slate. Using a lighter purple stroke or glowing effect helps.
       return <Flag size={28} className="text-purple-600 fill-yellow-400 drop-shadow-[0_0_2px_rgba(255,255,255,0.8)]" />;
     }
-    
-    // Classic (Team Colors) - Ensure good contrast
     return <Flag size={28} fill="currentColor" className={`${defaultColorClass} drop-shadow-sm`} />;
+  };
+
+  // 3D Cannon Component
+  const RenderCannon = ({ side }: { side: 'left' | 'right' }) => {
+    // Rotation based on side
+    const rotation = side === 'left' ? '-rotate-45' : 'rotate-45';
+    // Recoil animation transform. Push 'back' relative to angle.
+    // Left cannon (pointed left-up): needs to move right-down to recoil.
+    // Right cannon (pointed right-up): needs to move left-down to recoil.
+    const recoilClass = isAttacking 
+        ? (side === 'left' ? 'translate-x-2 translate-y-2' : '-translate-x-2 translate-y-2') 
+        : '';
+    
+    return (
+        <div className={`absolute -top-8 ${side === 'left' ? '-left-6' : '-right-6'} z-20 transition-transform duration-75 ease-out ${recoilClass}`}>
+            {/* Wooden Base/Wheel */}
+            <div className={`absolute bottom-0 ${side === 'left' ? 'right-1' : 'left-1'} w-5 h-5 bg-amber-900 rounded-full border-4 border-slate-800 shadow-md z-10`}></div>
+            
+            {/* Cannon Barrel - 3D Gradient */}
+            <div className={`relative w-8 h-16 bg-gradient-to-r from-slate-900 via-slate-600 to-slate-800 border-2 border-slate-900 rounded-t-sm rounded-b-lg ${rotation} shadow-2xl flex flex-col items-center justify-between py-1 overflow-visible`}>
+                 {/* Reinforcement Rings */}
+                 <div className="w-full h-1 bg-slate-950/50 shadow-sm"></div>
+                 <div className="w-full h-1 bg-slate-950/50 shadow-sm mt-auto mb-2"></div>
+                 
+                 {/* Muzzle Opening (Black Hole) */}
+                 <div className="absolute -top-1 w-6 h-3 bg-black rounded-[100%] border border-slate-700 shadow-[inset_0_2px_4px_rgba(0,0,0,1)]"></div>
+
+                 {/* Muzzle Flash & Smoke (Conditional) */}
+                 {isAttacking && (
+                    <div className="absolute -top-10 w-full flex flex-col items-center animate-pulse">
+                        <div className="relative">
+                            <div className="absolute inset-0 bg-orange-500 blur-md rounded-full scale-150 opacity-80"></div>
+                            <Star size={36} className="text-yellow-200 fill-yellow-100 rotate-45 relative z-20" strokeWidth={0} />
+                            <Cloud size={24} className="text-white/60 fill-white/60 absolute -top-4 -left-4 z-10" />
+                        </div>
+                    </div>
+                 )}
+            </div>
+        </div>
+    );
   };
 
   return (
@@ -62,17 +95,17 @@ export const Castle: React.FC<CastleProps> = ({ health, maxHealth, isShaking, st
         </div>
       </div>
 
-      {/* CASTLE COMPLEX - Scaled for responsiveness */}
+      {/* CASTLE COMPLEX */}
       <div className="relative w-64 h-48 sm:w-80 sm:h-64 md:w-96 md:h-72 flex items-end justify-center perspective-500">
         
-        {/* Moat / Water Base */}
+        {/* Moat */}
         <div className="absolute -bottom-4 w-[120%] h-12 md:h-16 bg-blue-500/50 rounded-full blur-sm flex items-center justify-center overflow-hidden border-t-4 border-blue-400/30">
              <div className="animate-wiggle opacity-50 text-blue-200 w-full flex justify-around">
                 <Waves size={24} className="md:w-8 md:h-8" /> <Waves size={24} className="md:w-8 md:h-8" /> <Waves size={24} className="md:w-8 md:h-8" />
              </div>
         </div>
 
-        {/* Drawbridge (Open) */}
+        {/* Drawbridge */}
         <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-16 md:w-24 h-16 md:h-20 bg-amber-900 border-x-4 border-amber-950 origin-bottom transform perspective-origin-bottom rotate-x-12 z-10 flex flex-col items-center justify-around py-2 shadow-lg">
              <div className="w-full h-1 bg-black/20"></div>
              <div className="w-full h-1 bg-black/20"></div>
@@ -80,7 +113,7 @@ export const Castle: React.FC<CastleProps> = ({ health, maxHealth, isShaking, st
              <div className="w-full h-1 bg-black/20"></div>
         </div>
 
-        {/* Back Towers (Shadowed) */}
+        {/* Back Towers */}
         <div className={`absolute bottom-6 md:bottom-8 -left-2 md:-left-4 w-16 md:w-20 h-36 md:h-48 ${shadeClass.split(' ')[0]} rounded-t-lg z-0 opacity-80 scale-90`}></div>
         <div className={`absolute bottom-6 md:bottom-8 -right-2 md:-right-4 w-16 md:w-20 h-36 md:h-48 ${shadeClass.split(' ')[0]} rounded-t-lg z-0 opacity-80 scale-90`}></div>
 
@@ -98,13 +131,6 @@ export const Castle: React.FC<CastleProps> = ({ health, maxHealth, isShaking, st
                  {renderFlag('text-blue-500 fill-blue-300')} 
                  <div className="h-14 w-1 bg-slate-800 mx-auto"></div>
              </div>
-
-             {/* Pet Dragon - Made larger and more visible */}
-             {style.decoration === 'dragon' && (
-               <div className="absolute -top-6 md:-top-10 -left-8 md:-left-12 animate-bounce z-40" style={{ animationDuration: '3s' }}>
-                  <Bird className="text-red-600 drop-shadow-xl w-14 h-14 md:w-20 md:h-20 transform -scale-x-100" strokeWidth={2} fill="#ea580c"/>
-               </div>
-             )}
         </div>
 
         {/* Main Right Tower */}
@@ -125,28 +151,25 @@ export const Castle: React.FC<CastleProps> = ({ health, maxHealth, isShaking, st
 
         {/* Main Keep (Center) */}
         <div className={`absolute bottom-0 left-1/2 -translate-x-1/2 w-28 md:w-48 h-32 md:h-48 ${wallColor} shadow-[0_0_30px_rgba(0,0,0,0.5)] z-10 flex flex-col items-center justify-end rounded-t-sm`}>
-          {/* Battlements */}
            <div className="w-full h-6 md:h-8 bg-slate-700 absolute -top-3 md:-top-4 rounded-sm flex justify-around px-2 shadow-lg relative">
                 <div className="w-3 md:w-5 h-3 md:h-5 bg-slate-700 -mt-2 border-t border-slate-500"></div>
                 <div className="w-3 md:w-5 h-3 md:h-5 bg-slate-700 -mt-2 border-t border-slate-500"></div>
                 <div className="w-3 md:w-5 h-3 md:h-5 bg-slate-700 -mt-2 border-t border-slate-500"></div>
                 <div className="w-3 md:w-5 h-3 md:h-5 bg-slate-700 -mt-2 border-t border-slate-500"></div>
 
-                {/* Cannons - Made larger and sticking out more */}
+                {/* UPDATED: New 3D Cannons using helper component */}
                 {style.decoration === 'cannons' && (
                   <>
-                    <div className="absolute -top-4 -left-2 w-3 h-8 md:w-5 md:h-10 bg-slate-900 border border-slate-600 rounded-sm -rotate-45 z-0 shadow-lg"></div>
-                    <div className="absolute -top-4 -right-2 w-3 h-8 md:w-5 md:h-10 bg-slate-900 border border-slate-600 rounded-sm rotate-45 z-0 shadow-lg"></div>
+                    <RenderCannon side="left" />
+                    <RenderCannon side="right" />
                   </>
                 )}
            </div>
 
-           {/* Royal Shield Symbol */}
            <div className="absolute top-6 md:top-8 text-slate-900/20 scale-75 md:scale-100">
               <ShieldAlert size={40} />
            </div>
 
-          {/* Gate Archway */}
           <div className="relative w-16 md:w-24 h-20 md:h-28 bg-slate-800 rounded-t-full border-4 md:border-8 border-slate-600 shadow-inner flex items-end justify-center overflow-hidden">
              <div className="absolute inset-0 bg-black/60 z-0"></div>
              <div className="absolute top-0 w-full h-1/2 flex justify-around items-start z-10">
@@ -157,47 +180,60 @@ export const Castle: React.FC<CastleProps> = ({ health, maxHealth, isShaking, st
           </div>
         </div>
 
-        {/* --- DECORATIONS RENDERING --- */}
+        {/* --- DECORATIONS RENDERING (MOVED OUTSIDE TOWERS TO PREVENT CLIPPING) --- */}
         
         {/* Torches */}
         {style.decoration === 'torches' && (
             <>
-                <div className="absolute bottom-24 md:bottom-32 left-6 md:left-8 animate-pulse text-orange-500 drop-shadow-[0_0_15px_orange] z-30 scale-90 md:scale-125"><Flame fill="orange" /></div>
-                <div className="absolute bottom-24 md:bottom-32 right-6 md:right-8 animate-pulse text-orange-500 drop-shadow-[0_0_15px_orange] z-30 scale-90 md:scale-125"><Flame fill="orange" /></div>
+                <div className="absolute bottom-32 md:bottom-48 left-4 md:left-8 animate-pulse text-orange-500 drop-shadow-[0_0_15px_orange] z-50 scale-125"><Flame fill="orange" /></div>
+                <div className="absolute bottom-32 md:bottom-48 right-4 md:right-8 animate-pulse text-orange-500 drop-shadow-[0_0_15px_orange] z-50 scale-125"><Flame fill="orange" /></div>
             </>
         )}
         
         {/* Vines */}
         {style.decoration === 'vines' && (
             <>
-                <div className="absolute bottom-0 left-0 text-green-800 z-30 scale-90 md:scale-125"><Flower size={32} /></div>
-                <div className="absolute bottom-16 md:bottom-20 -left-2 text-green-700 z-30 -rotate-12 scale-90 md:scale-110"><Flower size={20} /></div>
-                <div className="absolute bottom-8 md:bottom-10 right-0 text-green-800 z-30 rotate-45 scale-90 md:scale-110"><Flower size={24} /></div>
-                <div className="absolute bottom-24 left-1 text-green-700 z-30 rotate-45 scale-75"><Flower size={18} /></div>
+                <div className="absolute bottom-0 -left-6 text-green-800 z-50 scale-150"><Flower size={32} /></div>
+                <div className="absolute bottom-20 md:bottom-32 left-0 text-green-700 z-50 -rotate-12 scale-125"><Flower size={20} /></div>
+                <div className="absolute bottom-20 md:bottom-32 right-0 text-green-800 z-50 rotate-45 scale-125"><Flower size={24} /></div>
+                <div className="absolute bottom-10 -right-6 text-green-700 z-50 rotate-45 scale-125"><Flower size={18} /></div>
+                
+                {/* Vines on Keep */}
+                <div className="absolute bottom-12 left-1/2 -translate-x-12 text-green-900 z-50 rotate-12 opacity-80 scale-110"><Flower size={16} /></div>
             </>
         )}
 
         {/* Royal Garden */}
         {style.decoration === 'garden' && (
             <>
-                <div className="absolute bottom-0 -left-6 md:-left-12 text-pink-500 z-30 scale-100 md:scale-125 drop-shadow-md"><Flower size={32} fill="currentColor" /></div>
-                <div className="absolute bottom-0 -right-6 md:-right-12 text-purple-500 z-30 scale-100 md:scale-125 drop-shadow-md"><Flower size={32} fill="currentColor" /></div>
-                <div className="absolute bottom-4 left-4 text-green-500 z-30 scale-90 md:scale-110 animate-bounce" style={{ animationDuration: '4s' }}><Flower size={20} fill="#fce7f3" /></div>
-                <div className="absolute bottom-4 right-4 text-green-500 z-30 scale-90 md:scale-110 animate-bounce" style={{ animationDuration: '3.5s' }}><Flower size={20} fill="#fce7f3" /></div>
-                <div className="absolute bottom-0 w-full h-6 bg-green-700/80 rounded-full blur-sm z-20"></div>
+                <div className="absolute bottom-0 -left-12 md:-left-20 text-pink-500 z-50 scale-150 drop-shadow-md"><Flower size={32} fill="currentColor" /></div>
+                <div className="absolute bottom-0 -right-12 md:-right-20 text-purple-500 z-50 scale-150 drop-shadow-md"><Flower size={32} fill="currentColor" /></div>
+                <div className="absolute bottom-4 -left-4 text-green-500 z-50 scale-125 animate-bounce" style={{ animationDuration: '4s' }}><Flower size={20} fill="#fce7f3" /></div>
+                <div className="absolute bottom-4 -right-4 text-green-500 z-50 scale-125 animate-bounce" style={{ animationDuration: '3.5s' }}><Flower size={20} fill="#fce7f3" /></div>
+                <div className="absolute bottom-0 w-[120%] h-8 bg-green-700/80 rounded-full blur-md z-40"></div>
             </>
         )}
 
         {/* Guardian Statues */}
         {style.decoration === 'statues' && (
             <>
-                <div className="absolute bottom-0 -left-8 md:-left-16 text-slate-300 z-30 scale-100 md:scale-125 drop-shadow-xl">
-                   <Shield size={40} fill="currentColor" className="text-slate-500"/>
+                <div className="absolute bottom-0 -left-12 md:-left-20 text-slate-300 z-50 scale-150 drop-shadow-2xl">
+                   <Shield size={40} fill="currentColor" className="text-slate-600"/>
+                   <div className="absolute top-2 left-1/2 -translate-x-1/2 w-4 h-6 bg-slate-400/20 blur-sm rounded-full"></div>
                 </div>
-                <div className="absolute bottom-0 -right-8 md:-right-16 text-slate-300 z-30 scale-100 md:scale-125 drop-shadow-xl">
-                   <Shield size={40} fill="currentColor" className="text-slate-500"/>
+                <div className="absolute bottom-0 -right-12 md:-right-20 text-slate-300 z-50 scale-150 drop-shadow-2xl">
+                   <Shield size={40} fill="currentColor" className="text-slate-600"/>
+                   <div className="absolute top-2 left-1/2 -translate-x-1/2 w-4 h-6 bg-slate-400/20 blur-sm rounded-full"></div>
                 </div>
             </>
+        )}
+
+        {/* Pet Dragon - Now positioned relative to container to avoid clip */}
+        {style.decoration === 'dragon' && (
+             <div className="absolute bottom-40 md:bottom-64 left-0 md:-left-4 animate-bounce z-50" style={{ animationDuration: '3s' }}>
+                <Bird className="text-red-600 drop-shadow-2xl w-16 h-16 md:w-24 md:h-24 transform -scale-x-100" strokeWidth={2} fill="#ea580c"/>
+                <div className="absolute top-1/2 -left-4 w-4 h-4 bg-orange-500 blur-sm rounded-full animate-pulse"></div>
+             </div>
         )}
 
         {/* Damage Effect */}
