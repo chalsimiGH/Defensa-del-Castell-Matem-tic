@@ -26,11 +26,12 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
   evaluatedResult
 }) => {
   return (
-    // Compacted vertical padding for better desktop visibility
-    <div className="w-full bg-slate-900 pt-1 pb-2 px-2 md:p-3 md:pb-4 rounded-t-2xl md:rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.8)] border-t-4 md:border-t-8 border-slate-700 relative z-50 pb-[env(safe-area-inset-bottom)]">
-      <div className="max-w-4xl mx-auto flex flex-col gap-2 md:gap-3">
+    // Landscape styles: Remove rounded-t, full height, different padding, remove safe-area-bottom (handled by sidebar)
+    // Portrait styles: Maintain existing bottom bar look
+    <div className="w-full bg-slate-900 pt-1 pb-2 px-2 md:p-3 md:pb-4 rounded-t-2xl md:rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.8)] border-t-4 md:border-t-8 border-slate-700 relative z-50 pb-[env(safe-area-inset-bottom)] landscape:h-full landscape:rounded-none landscape:border-t-0 landscape:pb-2 landscape:overflow-y-auto landscape:flex landscape:flex-col landscape:justify-center">
+      <div className="max-w-4xl mx-auto flex flex-col gap-2 md:gap-3 w-full">
         
-        {/* Equation Display - Reduced height on mobile */}
+        {/* Equation Display */}
         <div className="bg-black/40 rounded-lg md:rounded-xl p-1.5 md:px-4 md:py-2 border-2 md:border-4 border-slate-600 min-h-[3rem] md:min-h-[4.5rem] flex items-center justify-between shadow-inner backdrop-blur-sm">
             <div className="flex flex-wrap gap-1 md:gap-2 items-center flex-1 overflow-x-auto custom-scrollbar">
                 {currentEquation.length === 0 && (
@@ -68,13 +69,11 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
             </div>
         </div>
 
-        {/* Controls Area - Unified Flex Container on Mobile, Grid on Desktop */}
-        {/* On mobile: Single container with wrap. On desktop: Grid with 2 columns. */}
-        <div className="flex flex-wrap gap-1 justify-center bg-slate-800 p-1.5 rounded-xl border border-slate-700 md:grid md:grid-cols-[1fr_auto] md:gap-3 md:bg-transparent md:p-0 md:border-0">
+        {/* Controls Area */}
+        <div className="flex flex-wrap gap-1 justify-center bg-slate-800 p-1.5 rounded-xl border border-slate-700 md:grid md:grid-cols-[1fr_auto] md:gap-3 md:bg-transparent md:p-0 md:border-0 landscape:flex landscape:bg-transparent landscape:border-0 landscape:p-0">
             
             {/* Number Pad Group */}
-            {/* 'contents' allows children to sit directly in the parent flex container on mobile */}
-            <div className="contents md:flex md:flex-wrap md:gap-2 md:justify-start md:bg-slate-800 md:p-3 md:rounded-xl md:border-2 md:border-slate-700">
+            <div className="contents md:flex md:flex-wrap md:gap-2 md:justify-start md:bg-slate-800 md:p-3 md:rounded-xl md:border-2 md:border-slate-700 landscape:flex landscape:gap-2 landscape:justify-center landscape:w-full">
                 {availableButtons.map((num) => (
                     <button
                         key={num}
@@ -86,10 +85,11 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
                 ))}
             </div>
 
-            {/* Visual Divider on Desktop only (implicit by grid gap), on mobile we just flow */}
+            {/* Visual Divider on Desktop only */}
+            <div className="hidden md:block w-2 landscape:hidden"></div> 
 
             {/* Operators & Actions Group */}
-            <div className="contents md:flex md:flex-wrap md:gap-2 md:justify-center md:bg-slate-800 md:p-3 md:rounded-xl md:border-2 md:border-slate-700">
+            <div className="contents md:flex md:flex-wrap md:gap-2 md:justify-center md:bg-slate-800 md:p-3 md:rounded-xl md:border-2 md:border-slate-700 landscape:flex landscape:gap-2 landscape:justify-center landscape:w-full landscape:mt-2">
                  {allowedOperators.map((op) => (
                     <button
                         key={op}
@@ -100,9 +100,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
                     </button>
                 ))}
                  
-                 {/* Spacers/Separators */}
-                 <div className="w-0.5 h-10 bg-slate-700 mx-0.5 md:hidden"></div> {/* Vertical line on mobile */}
-                 <div className="hidden md:block w-2"></div> 
+                 <div className="w-0.5 h-10 bg-slate-700 mx-0.5 md:hidden landscape:block landscape:w-2 landscape:h-10 landscape:bg-transparent"></div>
 
                  <button
                     onClick={onBackspace}

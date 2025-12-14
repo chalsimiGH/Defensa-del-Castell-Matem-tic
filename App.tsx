@@ -335,15 +335,24 @@ export default function App() {
         </div>
       </div>
 
-      {/* Game Area - INCREASED BOTTOM PADDING HERE (pb-12 md:pb-24) */}
-      <div className="flex-1 relative w-full max-w-7xl mx-auto flex flex-col z-10 min-h-0">
-        <div className="flex-1 relative flex items-end justify-center pb-12 md:pb-24"> 
-            <Castle 
-                health={gameState.health} 
-                maxHealth={gameState.maxHealth} 
-                isShaking={castleShaking}
-                style={gameState.castleStyle}
-            />
+      {/* 
+          SPLIT LAYOUT CONTAINER 
+          Portrait: Flex-Col (Game Top, Controls Bottom)
+          Landscape: Flex-Row (Game Left, Controls Right)
+      */}
+      <div className="flex-1 flex flex-col landscape:flex-row min-h-0 relative z-10 overflow-hidden">
+        
+        {/* Game Area */}
+        <div className="flex-1 relative flex items-end justify-center pb-12 md:pb-24 landscape:pb-4 landscape:items-end"> 
+            {/* Scale down castle slightly on landscape mobile so it fits in height */}
+            <div className="landscape:scale-[0.85] landscape:origin-bottom">
+              <Castle 
+                  health={gameState.health} 
+                  maxHealth={gameState.maxHealth} 
+                  isShaking={castleShaking}
+                  style={gameState.castleStyle}
+              />
+            </div>
             
             <EnemyRenderer enemies={enemies} />
 
@@ -355,21 +364,22 @@ export default function App() {
               </div>
             )}
         </div>
-      </div>
 
-      {/* Inputs */}
-      <div className="relative z-50 shrink-0">
-        <ControlPanel 
-            availableButtons={difficulty.availableButtons}
-            allowedOperators={difficulty.allowedOperators}
-            currentEquation={equation}
-            evaluatedResult={evaluatedResult}
-            onAddNumber={handleAddNumber}
-            onAddOperator={handleAddOperator}
-            onBackspace={handleBackspace}
-            onClear={handleClear}
-            onAttack={handleAttack}
-        />
+        {/* Inputs / Control Panel Container */}
+        <div className="relative z-50 shrink-0 landscape:w-[350px] lg:landscape:w-[450px] landscape:h-full landscape:border-l-4 landscape:border-slate-700 landscape:shadow-xl">
+            <ControlPanel 
+                availableButtons={difficulty.availableButtons}
+                allowedOperators={difficulty.allowedOperators}
+                currentEquation={equation}
+                evaluatedResult={evaluatedResult}
+                onAddNumber={handleAddNumber}
+                onAddOperator={handleAddOperator}
+                onBackspace={handleBackspace}
+                onClear={handleClear}
+                onAttack={handleAttack}
+            />
+        </div>
+
       </div>
 
       {/* Overlays */}
