@@ -8,9 +8,22 @@ import { Shop } from './components/Shop';
 import { GameState, Enemy, EquationItem, Operator, ShopItem, EnemyType } from './types';
 import { INITIAL_HEALTH, getDifficultyConfig, ENEMY_TYPES } from './constants';
 import { evaluateEquation, generateTargetNumber } from './utils/mathEngine';
-import { Trophy, RotateCcw, ShoppingBag, ArrowRight, Star, Volume2, VolumeX, Music } from 'lucide-react';
+import { Trophy, RotateCcw, ShoppingBag, ArrowRight, Star, Volume2, VolumeX, Music, Skull } from 'lucide-react';
 
-// --- RETRO BACKGROUND HELPERS ---
+// --- VISUAL COMPONENTS ---
+
+const InkSplatter = () => (
+    <div className="absolute inset-0 z-50 pointer-events-none flex items-center justify-center overflow-hidden animate-[fade-out_4s_forwards]">
+        {/* Main Blob */}
+        <svg viewBox="0 0 200 200" className="w-[120vmax] h-[120vmax] opacity-90 text-slate-900 fill-current animate-[scale-in_0.2s_ease-out]">
+            <path d="M45.7,29.9C30.3,39.6,18.4,59.2,19.3,79.5C20.3,99.8,34.1,120.8,53.2,130.4C72.4,140,96.8,138.3,115.4,126.3C133.9,114.3,146.6,92,148.2,70.5C149.8,49,140.3,28.3,123.6,16.2C106.9,4.1,83.1,0.6,65.6,8.2C48.1,15.8,36.9,34.5,45.7,29.9Z" transform="translate(20 20) scale(0.8)" />
+        </svg>
+        {/* Smaller Splatters */}
+        <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-slate-900 rounded-full blur-sm animate-[ping_0.5s_reverse]"></div>
+        <div className="absolute bottom-1/3 right-1/4 w-48 h-48 bg-slate-900 rounded-full blur-md"></div>
+        <div className="absolute top-1/2 right-1/3 w-24 h-24 bg-slate-900 rounded-full blur-sm"></div>
+    </div>
+);
 
 const PixelCloud = ({ className, delay = 0 }: { className?: string, delay?: number }) => (
   <div 
@@ -92,6 +105,7 @@ export default function App() {
   const [castleShaking, setCastleShaking] = useState(false);
   const [isAttacking, setIsAttacking] = useState(false);
   const [feedbackEffect, setFeedbackEffect] = useState<{ x: number, text: string, type: 'hit' | 'miss' } | null>(null);
+  const [inkEffect, setInkEffect] = useState(false);
   
   // Audio State
   const [isMusicMuted, setIsMusicMuted] = useState(false);
@@ -126,7 +140,11 @@ export default function App() {
   };
 
   // Constants for level progression
-  const getEnemiesPerLevel = (level: number) => 5 + (level * 2);
+  const getEnemiesPerLevel = (level: number) => {
+      // Boss levels (5, 10, 15...) only have 1 enemy (The Boss)
+      if (level % 5 === 0) return 1;
+      return 5 + (level * 2);
+  };
 
   // Refs for loop
   const lastUpdateRef = useRef<number>(0);
@@ -160,6 +178,26 @@ export default function App() {
     } catch (e) {
         console.error("SFX Error", e);
     }
+  };
+
+  const playInkSound = () => {
+     if (isSfxMuted) return;
+     try {
+         const Ctx = window.AudioContext || (window as any).webkitAudioContext;
+         if (!Ctx) return;
+         const ctx = audioContextRef.current || new Ctx();
+         const osc = ctx.createOscillator();
+         const gain = ctx.createGain();
+         osc.connect(gain);
+         gain.connect(ctx.destination);
+         osc.type = 'triangle'; // Squishy sound
+         osc.frequency.setValueAtTime(150, ctx.currentTime);
+         osc.frequency.linearRampToValueAtTime(100, ctx.currentTime + 0.3);
+         gain.gain.setValueAtTime(0.3, ctx.currentTime);
+         gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+         osc.start();
+         osc.stop(ctx.currentTime + 0.3);
+     } catch(e) {}
   };
 
   // Procedural Music Player (Arpeggiator)
@@ -225,6 +263,7 @@ export default function App() {
   const enterShop = () => {
     setGameState(prev => ({ ...prev, phase: 'shop' }));
     setEnemies([]); // Clear enemies when entering shop to be safe
+    setInkEffect(false);
   };
 
   const closeShop = () => {
@@ -248,6 +287,7 @@ export default function App() {
     setEnemies([]);
     setEquation([]);
     setEvaluatedResult(null);
+    setInkEffect(false);
     lastUpdateRef.current = performance.now();
     nextSpawnTimeRef.current = performance.now() + 2000;
   };
@@ -267,6 +307,7 @@ export default function App() {
     setEnemies([]);
     setEquation([]);
     setEvaluatedResult(null);
+    setInkEffect(false);
     lastUpdateRef.current = performance.now();
     nextSpawnTimeRef.current = performance.now() + 2000;
   };
@@ -371,46 +412,64 @@ export default function App() {
       const target = sortedEnemies[targetIndex];
       playRetroShootSound(); // Trigger synthesized SFX
 
-      setFeedbackEffect({ x: target.x, text: '💥', type: 'hit' });
-      setTimeout(() => setFeedbackEffect(null), 500);
-      
-      // Trigger Cannon Animation
-      setIsAttacking(true);
-      setTimeout(() => setIsAttacking(false), 200);
+      // Check if it's the BOSS
+      if (target.type === 'boss' && target.hitsRemaining && target.hitsRemaining > 1) {
+          // BOSS HIT, BUT NOT DEAD
+          setFeedbackEffect({ x: target.x, text: '💥', type: 'hit' });
+          setTimeout(() => setFeedbackEffect(null), 500);
 
-      // Update Enemy Status to 'dying' instead of removing immediately
-      setEnemies(prev => prev.map(e => 
-        e.id === target.id 
-          ? { ...e, status: 'dying', animationStartTime: performance.now() } 
-          : e
-      ));
-      
-      setGameState(prev => {
-        const newScore = prev.score + (prev.level * 10);
-        const coinGain = 1 + Math.floor(prev.level / 3);
-        const newDefeated = prev.enemiesDefeated + 1;
-        
-        // Check Level Complete Condition
-        const enemiesTarget = getEnemiesPerLevel(prev.level);
-        
-        if (newDefeated >= enemiesTarget) {
-            // Level Complete!
+          const newTargetValue = generateTargetNumber(difficulty.numberRange.min, difficulty.numberRange.max);
+          
+          setEnemies(prev => prev.map(e => 
+            e.id === target.id
+                ? { ...e, hitsRemaining: (e.hitsRemaining || 1) - 1, value: newTargetValue }
+                : e
+          ));
+      } else {
+          // NORMAL ENEMY OR BOSS DEATH
+          setFeedbackEffect({ x: target.x, text: '💥', type: 'hit' });
+          setTimeout(() => setFeedbackEffect(null), 500);
+          
+          // Trigger Cannon Animation
+          setIsAttacking(true);
+          setTimeout(() => setIsAttacking(false), 200);
+
+          // Update Enemy Status to 'dying'
+          setEnemies(prev => prev.map(e => 
+            e.id === target.id 
+              ? { ...e, status: 'dying', animationStartTime: performance.now() } 
+              : e
+          ));
+          
+          setGameState(prev => {
+            const isBoss = target.type === 'boss';
+            const scoreAdd = isBoss ? 500 : (prev.level * 10);
+            const newScore = prev.score + scoreAdd;
+            const coinGain = isBoss ? 50 : (1 + Math.floor(prev.level / 3));
+            const newDefeated = prev.enemiesDefeated + 1;
+            
+            // Check Level Complete Condition
+            const enemiesTarget = getEnemiesPerLevel(prev.level);
+            
+            if (newDefeated >= enemiesTarget) {
+                // Level Complete!
+                return {
+                    ...prev,
+                    score: newScore,
+                    enemiesDefeated: newDefeated,
+                    currency: prev.currency + coinGain + (isBoss ? 20 : 5), 
+                    phase: 'level_complete'
+                };
+            }
+
             return {
-                ...prev,
-                score: newScore,
-                enemiesDefeated: newDefeated,
-                currency: prev.currency + coinGain + 5, // Bonus currency for level finish
-                phase: 'level_complete'
+              ...prev,
+              score: newScore,
+              enemiesDefeated: newDefeated,
+              currency: prev.currency + coinGain
             };
-        }
-
-        return {
-          ...prev,
-          score: newScore,
-          enemiesDefeated: newDefeated,
-          currency: prev.currency + coinGain
-        };
-      });
+          });
+      }
       handleClear();
     } else {
       // MISS!
@@ -444,36 +503,70 @@ export default function App() {
     const deltaTime = timestamp - lastUpdateRef.current;
     lastUpdateRef.current = timestamp;
 
+    // 0. Boss Level Logic
+    const isBossLevel = gameState.level % 5 === 0;
+    
     // 1. Spawning Logic
     const lastEnemy = enemies.length > 0 ? enemies[enemies.length - 1] : null;
     const canSpawn = timestamp > nextSpawnTimeRef.current && (!lastEnemy || lastEnemy.x < 60);
 
-    // Stop spawning if we are close to finishing level to let user clear screen
     const enemiesTarget = getEnemiesPerLevel(gameState.level);
-    // Count active and defeated enemies to know if we need more
     const activeAndDefeatedCount = gameState.enemiesDefeated + enemies.filter(e => e.status !== 'dying').length;
     const enemiesRemainingToSpawn = enemiesTarget - activeAndDefeatedCount;
 
     if (canSpawn && enemiesRemainingToSpawn > 0) {
-      const newVal = generateTargetNumber(difficulty.numberRange.min, difficulty.numberRange.max);
-      const type = getEnemyTypeForNumber(newVal, gameState.level);
-      
-      const newEnemy: Enemy = {
-        id: timestamp.toString(),
-        value: newVal,
-        type: type,
-        x: 100, 
-        speed: ENEMY_TYPES[type].speed * difficulty.enemySpeedBase,
-        maxHealth: 1,
-        status: 'walking',
-        animationStartTime: 0
-      };
-
-      setEnemies(prev => [...prev, newEnemy]);
-      nextSpawnTimeRef.current = timestamp + difficulty.spawnRate + (Math.random() * 1000 - 500);
+       // Check if Boss Level - if so, only spawn Boss once
+       if (isBossLevel) {
+           // Should only spawn if no boss is currently active and none defeated yet (implied by enemiesRemainingToSpawn > 0 for target 1)
+           const newEnemy: Enemy = {
+                id: timestamp.toString(),
+                value: generateTargetNumber(difficulty.numberRange.min, difficulty.numberRange.max),
+                type: 'boss',
+                x: 100, 
+                speed: ENEMY_TYPES['boss'].speed * difficulty.enemySpeedBase,
+                maxHealth: 1,
+                status: 'walking',
+                animationStartTime: 0,
+                hitsRemaining: 5 // Boss needs 5 hits
+           };
+           setEnemies(prev => [...prev, newEnemy]);
+           // Set spawn time way forward so no one else spawns
+           nextSpawnTimeRef.current = timestamp + 999999;
+       } else {
+           // Normal Spawn
+            const newVal = generateTargetNumber(difficulty.numberRange.min, difficulty.numberRange.max);
+            const type = getEnemyTypeForNumber(newVal, gameState.level);
+            
+            const newEnemy: Enemy = {
+                id: timestamp.toString(),
+                value: newVal,
+                type: type,
+                x: 100, 
+                speed: ENEMY_TYPES[type].speed * difficulty.enemySpeedBase,
+                maxHealth: 1,
+                status: 'walking',
+                animationStartTime: 0
+            };
+            setEnemies(prev => [...prev, newEnemy]);
+            nextSpawnTimeRef.current = timestamp + difficulty.spawnRate + (Math.random() * 1000 - 500);
+       }
     }
 
-    // 2. Movement & Animations
+    // 2. Ink Ability Logic (Boss Only)
+    if (isBossLevel && !inkEffect) {
+        const boss = enemies.find(e => e.type === 'boss' && e.status === 'walking');
+        if (boss) {
+            // Random chance to shoot ink (0.2% per frame approx)
+            if (Math.random() < 0.002) {
+                playInkSound();
+                setInkEffect(true);
+                // Clear ink after 4 seconds
+                setTimeout(() => setInkEffect(false), 4000);
+            }
+        }
+    }
+
+    // 3. Movement & Animations
     setEnemies(prevEnemies => {
       const nextEnemies: Enemy[] = [];
       let damageTaken = 0;
@@ -504,7 +597,7 @@ export default function App() {
 
         if (newX <= 0) {
           // Trigger Attack
-          damageTaken += 20; 
+          damageTaken += (enemy.type === 'boss' ? 100 : 20); // Boss kills instantly if it reaches castle
           nextEnemies.push({
               ...enemy,
               x: 0,
@@ -525,7 +618,7 @@ export default function App() {
     });
 
     animationFrameRef.current = requestAnimationFrame(loop);
-  }, [gameState.phase, gameState.health, gameState.level, difficulty, enemies, gameState.enemiesDefeated]);
+  }, [gameState.phase, gameState.health, gameState.level, difficulty, enemies, gameState.enemiesDefeated, inkEffect]);
 
   useEffect(() => {
     if (gameState.phase === 'playing') {
@@ -579,6 +672,9 @@ export default function App() {
       </div>
       {/* --- END BACKGROUND --- */}
 
+      {/* --- INK EFFECT OVERLAY --- */}
+      {inkEffect && <InkSplatter />}
+
       {/* Top Stats Bar */}
       <div className="relative z-30 flex flex-col gap-2 p-2 md:p-4 shrink-0">
         <div className="flex justify-between items-center">
@@ -592,8 +688,8 @@ export default function App() {
             </div>
             
             {/* Level */}
-            <div className="flex items-center gap-2 bg-indigo-600/90 text-white rounded-full px-4 py-2 shadow-lg border-2 border-indigo-400">
-                <span className="font-bold uppercase text-sm">Nivell</span>
+            <div className={`flex items-center gap-2 ${gameState.level % 5 === 0 ? 'bg-purple-800 border-purple-500 animate-pulse' : 'bg-indigo-600/90 border-indigo-400'} text-white rounded-full px-4 py-2 shadow-lg border-2`}>
+                <span className="font-bold uppercase text-sm">{gameState.level % 5 === 0 ? '☠️ BOSS' : 'Nivell'}</span>
                 <span className="font-bold text-xl">{gameState.level}</span>
             </div>
 
@@ -702,17 +798,21 @@ export default function App() {
               <div className="bg-white rounded-3xl p-8 max-w-lg w-full text-center border-8 border-yellow-400 shadow-[0_0_50px_rgba(250,204,21,0.5)] animate-in zoom-in">
                   <div className="flex justify-center mb-4">
                       <div className="relative">
-                        <Star size={80} className="text-yellow-400 fill-yellow-400 animate-spin-slow" />
+                        {gameState.level % 5 === 0 ? (
+                            <Skull size={80} className="text-purple-600 fill-purple-400 animate-bounce" />
+                        ) : (
+                            <Star size={80} className="text-yellow-400 fill-yellow-400 animate-spin-slow" />
+                        )}
                         <div className="absolute inset-0 flex items-center justify-center text-2xl font-black text-yellow-800">
                             {gameState.level}
                         </div>
                       </div>
                   </div>
                   <h1 className="text-4xl font-extrabold text-indigo-900 mb-2">
-                      Nivell Completat!
+                      {gameState.level % 5 === 0 ? 'BOSS DERROTAT!' : 'Nivell Completat!'}
                   </h1>
                   <p className="text-slate-500 mb-8 text-lg">
-                     Molt bona feina defensant el castell.
+                     {gameState.level % 5 === 0 ? 'El regne està segur... per ara.' : 'Molt bona feina defensant el castell.'}
                   </p>
 
                   <div className="grid grid-cols-1 gap-4">

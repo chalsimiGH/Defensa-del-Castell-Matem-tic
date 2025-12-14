@@ -2,7 +2,7 @@
 import React from 'react';
 
 export type Operator = '+' | '-' | '×' | '÷';
-export type EnemyType = 'goblin' | 'orc' | 'dragon' | 'skeleton' | 'golem' | 'slime';
+export type EnemyType = 'goblin' | 'orc' | 'dragon' | 'skeleton' | 'golem' | 'slime' | 'boss';
 export type EnemyStatus = 'walking' | 'attacking' | 'dying';
 
 export interface Enemy {
@@ -14,6 +14,7 @@ export interface Enemy {
   maxHealth: number; 
   status: EnemyStatus;
   animationStartTime?: number;
+  hitsRemaining?: number; // For Boss mechanic
 }
 
 export type GamePhase = 'tutorial' | 'playing' | 'level_complete' | 'shop' | 'gameover';

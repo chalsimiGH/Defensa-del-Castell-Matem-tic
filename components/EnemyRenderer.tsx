@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { Enemy } from '../types';
 import { ENEMY_TYPES } from '../constants';
-import { Ghost, Skull, Swords, Bot, Shield, Droplets, Flame, Bird, Bone, Eye, Cloud } from 'lucide-react';
+import { Ghost, Skull, Swords, Bot, Shield, Droplets, Flame, Bird, Bone, Eye, Cloud, Zap } from 'lucide-react';
 
 interface EnemyRendererProps {
   enemies: Enemy[];
@@ -107,6 +108,43 @@ const RenderEnemyVisual = ({ type, color }: { type: string, color: string }) => 
                     <div className="absolute top-1/3 left-1/3 w-2 h-2 bg-black rounded-full opacity-50"></div>
                 </div>
             );
+        case 'boss':
+            return (
+                <div className="relative animate-[float-slow_4s_ease-in-out_infinite]">
+                    {/* Aura */}
+                    <div className="absolute inset-0 bg-purple-600/30 blur-xl rounded-full animate-pulse"></div>
+                    
+                    {/* Main Head */}
+                    <div className="relative z-10">
+                        <Skull size={80} className="text-gray-200 fill-black drop-shadow-[0_0_15px_rgba(147,51,234,0.8)]" strokeWidth={1.5} />
+                        {/* Scary Eyes */}
+                        <div className="absolute top-7 left-4 w-4 h-4 bg-red-600 rounded-full shadow-[0_0_10px_red] animate-pulse">
+                            <div className="w-1 h-2 bg-black absolute top-1 left-1.5 rounded-full"></div>
+                        </div>
+                        <div className="absolute top-7 right-4 w-4 h-4 bg-red-600 rounded-full shadow-[0_0_10px_red] animate-pulse">
+                            <div className="w-1 h-2 bg-black absolute top-1 left-1.5 rounded-full"></div>
+                        </div>
+                        {/* Horns */}
+                        <div className="absolute -top-6 -left-2 rotate-[-20deg]">
+                            <Zap size={30} className="text-purple-400 fill-purple-900" />
+                        </div>
+                        <div className="absolute -top-6 -right-2 rotate-[20deg] scale-x-[-1]">
+                            <Zap size={30} className="text-purple-400 fill-purple-900" />
+                        </div>
+                    </div>
+
+                    {/* Flames around */}
+                    <div className="absolute -bottom-4 -left-6 z-0 animate-bounce delay-100">
+                        <Flame size={40} className="text-purple-600 fill-black" />
+                    </div>
+                    <div className="absolute -bottom-4 -right-6 z-0 animate-bounce delay-300">
+                        <Flame size={40} className="text-purple-600 fill-black" />
+                    </div>
+                    
+                    {/* Glitchy Effect Lines */}
+                    <div className="absolute top-1/2 left-0 w-full h-0.5 bg-red-500 opacity-0 animate-[ping_2s_infinite]"></div>
+                </div>
+            );
         default:
             return <Ghost size={48} className={color} />;
     }
@@ -121,6 +159,7 @@ export const EnemyRenderer: React.FC<EnemyRendererProps> = ({ enemies }) => {
         const zIndex = 1000 - Math.floor(pos.bottom);
         const isDying = enemy.status === 'dying';
         const isAttacking = enemy.status === 'attacking';
+        const isBoss = enemy.type === 'boss';
         
         return (
           <div
@@ -133,10 +172,22 @@ export const EnemyRenderer: React.FC<EnemyRendererProps> = ({ enemies }) => {
               zIndex: zIndex
             }}
           >
+            {/* Boss Hits Remaining Indicator */}
+            {isBoss && enemy.hitsRemaining && (
+                <div className="flex gap-1 mb-2 absolute -top-12">
+                    {[...Array(5)].map((_, i) => (
+                        <div 
+                            key={i} 
+                            className={`w-3 h-3 rounded-full border border-black ${i < enemy.hitsRemaining! ? 'bg-red-500 shadow-[0_0_5px_red]' : 'bg-gray-800'}`}
+                        ></div>
+                    ))}
+                </div>
+            )}
+
             {/* Target Value Bubble */}
             <div className={`relative mb-1 ${isDying ? 'hidden' : ''} z-20`}>
-                <div className="absolute inset-0 bg-red-500 rounded-full animate-ping opacity-20"></div>
-                <div className="bg-white border-2 border-red-800 rounded-full min-w-[32px] h-8 px-2 flex items-center justify-center font-black text-lg text-slate-900 shadow-md">
+                <div className={`absolute inset-0 rounded-full animate-ping opacity-20 ${isBoss ? 'bg-purple-500' : 'bg-red-500'}`}></div>
+                <div className={`${isBoss ? 'bg-purple-950 border-purple-500 text-white' : 'bg-white border-red-800 text-slate-900'} border-2 rounded-full min-w-[32px] h-8 px-2 flex items-center justify-center font-black text-lg shadow-md`}>
                    {enemy.value}
                 </div>
             </div>

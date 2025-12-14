@@ -10,6 +10,7 @@ export const ENEMY_TYPES: Record<EnemyType, { speed: number; visualScale: number
   skeleton: { speed: 0.035, visualScale: 1.3, color: 'text-slate-300', label: 'Esquelet' },
   golem: { speed: 0.02, visualScale: 1.8, color: 'text-stone-600', label: 'Golem' },
   slime: { speed: 0.03, visualScale: 1.4, color: 'text-lime-400', label: 'Slime' },
+  boss: { speed: 0.01, visualScale: 3.5, color: 'text-purple-950', label: 'El Segador' },
 };
 
 // Difficulty Progression Logic
