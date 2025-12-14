@@ -8,7 +8,7 @@ import { Shop } from './components/Shop';
 import { GameState, Enemy, EquationItem, Operator, ShopItem, EnemyType } from './types';
 import { INITIAL_HEALTH, getDifficultyConfig, ENEMY_TYPES } from './constants';
 import { evaluateEquation, generateTargetNumber } from './utils/mathEngine';
-import { Trophy, RotateCcw, ShoppingBag, ArrowRight, Star, Volume2, VolumeX, Music, Bird } from 'lucide-react';
+import { Trophy, RotateCcw, ShoppingBag, ArrowRight, Star, Volume2, VolumeX, Music } from 'lucide-react';
 
 // --- RETRO BACKGROUND HELPERS ---
 
@@ -102,6 +102,33 @@ export default function App() {
 
   // Track if game has started to allow autoplay after interaction
   const [hasStarted, setHasStarted] = useState(false); 
+  
+  // --- CHEAT CODE LOGIC ---
+  const [cheatClicks, setCheatClicks] = useState(0);
+  const cheatTimerRef = useRef<number | null>(null);
+
+  const handleScoreClick = () => {
+    // Clear existing timer
+    if (cheatTimerRef.current) {
+        window.clearTimeout(cheatTimerRef.current);
+    }
+
+    const newCount = cheatClicks + 1;
+    setCheatClicks(newCount);
+
+    if (newCount >= 5) {
+        // TRIGGER CHEAT
+        setGameState(prev => ({ ...prev, currency: prev.currency + 100 }));
+        setFeedbackEffect({ x: 50, text: '+100 💎', type: 'hit' }); // Visual feedback
+        setTimeout(() => setFeedbackEffect(null), 1000);
+        setCheatClicks(0); // Reset
+    } else {
+        // Set timer to reset clicks if user stops clicking quickly
+        cheatTimerRef.current = window.setTimeout(() => {
+            setCheatClicks(0);
+        }, 800);
+    }
+  };
 
   // Constants for level progression
   const getEnemiesPerLevel = (level: number) => 5 + (level * 2);
@@ -147,22 +174,17 @@ export default function App() {
     }
   };
 
-  // Background Music Logic
+  // Music Mute Toggle Logic
   useEffect(() => {
     if (!musicRef.current) return;
-
-    if (hasStarted && !isMusicMuted) {
-        musicRef.current.volume = 0.3;
-        const playPromise = musicRef.current.play();
-        if (playPromise !== undefined) {
-            playPromise.catch(error => {
-                console.log("Audio autoplay prevented (waiting for interaction):", error);
-            });
-        }
-    } else {
+    
+    if (isMusicMuted) {
         musicRef.current.pause();
+    } else if (hasStarted) {
+        // Try to resume if it was playing and not muted
+        musicRef.current.play().catch(e => console.log("Resume failed", e));
     }
-  }, [hasStarted, isMusicMuted]);
+  }, [isMusicMuted, hasStarted]);
 
 
   // Transitions
@@ -199,12 +221,17 @@ export default function App() {
   const startGame = () => {
     setHasStarted(true); 
     
-    // Explicitly try to play music on user interaction event (Click)
+    // --- CRITICAL AUDIO FIX ---
+    // Play directly on user interaction event
     if (musicRef.current && !isMusicMuted) {
-        musicRef.current.volume = 0.3;
-        // Resetting current time ensures it starts from beginning if it was stuck
+        musicRef.current.volume = 0.4;
         musicRef.current.currentTime = 0;
-        musicRef.current.play().catch(e => console.log("Start game music play failed:", e));
+        const playPromise = musicRef.current.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(error => {
+                console.error("Music playback failed:", error);
+            });
+        }
     }
 
     setGameState(prev => ({
@@ -494,12 +521,12 @@ export default function App() {
     // UPDATED: 'fixed inset-0 h-[100dvh]' prevents scrolling and respects mobile address bars
     <div className="fixed inset-0 w-full h-[100dvh] bg-sky-300 overflow-hidden flex flex-col font-sans select-none">
       
-      {/* Background Music */}
+      {/* Background Music - New Source */}
       <audio 
         ref={musicRef} 
         loop 
         preload="auto"
-        src="https://ia800104.us.archive.org/18/items/8-bit-loop/8-bit-loop.mp3" 
+        src="https://opengameart.org/sites/default/files/Rolemusic_-_pl4y1ng.mp3" 
       />
       
       {/* SFX audio tag removed - now using Web Audio API */}
@@ -542,8 +569,11 @@ export default function App() {
       {/* Top Stats Bar */}
       <div className="relative z-30 flex flex-col gap-2 p-2 md:p-4 shrink-0">
         <div className="flex justify-between items-center">
-            {/* Score */}
-            <div className="flex items-center gap-2 bg-white/90 backdrop-blur rounded-full px-4 py-2 shadow-lg border-2 border-slate-200">
+            {/* Score (Now with Cheat Click Handler) */}
+            <div 
+                onClick={handleScoreClick}
+                className="flex items-center gap-2 bg-white/90 backdrop-blur rounded-full px-4 py-2 shadow-lg border-2 border-slate-200 cursor-pointer active:scale-95 transition-transform select-none"
+            >
                 <div className="bg-yellow-400 p-1 rounded-full"><Trophy size={20} className="text-yellow-900"/></div>
                 <span className="font-bold text-slate-800 text-lg">{gameState.score}</span>
             </div>
@@ -614,7 +644,7 @@ export default function App() {
 
             {feedbackEffect && (
               <div 
-                className="absolute bottom-1/2 left-1/2 transform -translate-x-1/2 text-8xl animate-ping origin-center pointer-events-none z-50 text-white drop-shadow-md"
+                className="absolute bottom-1/2 left-1/2 transform -translate-x-1/2 text-5xl md:text-8xl animate-bounce origin-center pointer-events-none z-50 text-white drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)] font-black"
               >
                 {feedbackEffect.text}
               </div>

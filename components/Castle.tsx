@@ -11,51 +11,71 @@ interface CastleProps {
   isAttacking?: boolean; // New prop for animation
 }
 
-// Improved Pixel Art Dragon Component
+// Improved CSS-based Dragon Component (No more bird look)
 const PixelDragon = () => {
   return (
-    <div className="absolute -top-24 left-1/2 -translate-x-1/2 z-50 animate-wiggle scale-150 origin-bottom" style={{ animationDuration: '3s' }}>
-        {/* Shadow */}
-        <div className="absolute bottom-0 left-4 w-12 h-3 bg-black/20 rounded-full blur-md"></div>
+    <div className="absolute -top-32 left-1/2 -translate-x-1/2 z-50 animate-wiggle scale-[1.8] origin-bottom" style={{ animationDuration: '4s' }}>
         
-        <div className="relative w-20 h-20">
-            {/* Wings (Large and flapping) */}
-            <div className="absolute top-4 -left-6 w-10 h-6 origin-bottom-right animate-[pulse_0.8s_ease-in-out_infinite]">
-                 <div className="w-full h-full bg-red-700 rounded-tl-3xl border-2 border-red-900"></div>
-                 <div className="w-8 h-4 bg-red-600 absolute bottom-0 left-0"></div>
-            </div>
+        {/* Dragon Shadow */}
+        <div className="absolute bottom-0 left-2 w-16 h-4 bg-black/20 rounded-full blur-sm"></div>
 
-             <div className="absolute top-4 -right-6 w-10 h-6 origin-bottom-left animate-[pulse_0.8s_ease-in-out_infinite]" style={{ transform: 'scaleX(-1)' }}>
-                 <div className="w-full h-full bg-red-700 rounded-tl-3xl border-2 border-red-900"></div>
-                 <div className="w-8 h-4 bg-red-600 absolute bottom-0 left-0"></div>
-            </div>
-
-            {/* Body (Thicker) */}
-            <div className="absolute bottom-4 left-5 w-10 h-12 bg-green-700 rounded-b-xl border-x-2 border-green-900"></div>
-            <div className="absolute bottom-4 left-6 w-8 h-10 bg-yellow-400/80 rounded-b-lg"></div> {/* Belly */}
+        <div className="relative w-24 h-24">
             
-            {/* Tail */}
-            <div className="absolute bottom-2 left-2 w-8 h-3 bg-green-700 rotate-12"></div>
-            <div className="absolute bottom-4 -left-2 w-4 h-4 bg-red-600 rotate-45"></div> {/* Tail Tip */}
+            {/* Left Wing (Bat/Membrane Style) */}
+            <div className="absolute top-6 -left-8 w-12 h-10 origin-bottom-right animate-[pulse_1.5s_ease-in-out_infinite]">
+                 {/* Wing Bone */}
+                 <div className="absolute top-0 right-0 w-full h-1 bg-red-900 rounded-full -rotate-12"></div>
+                 {/* Wing Membrane */}
+                 <div className="absolute top-1 right-0 w-full h-full bg-red-600/90 rounded-bl-full border-l-2 border-red-900 clip-path-polygon" style={{ clipPath: 'polygon(100% 0, 0 100%, 100% 100%)' }}></div>
+                 <div className="absolute top-2 right-2 w-2/3 h-2/3 bg-red-500/50 rounded-bl-full"></div>
+            </div>
 
-            {/* Head (More dragon-like shape) */}
-            <div className="absolute top-0 left-4 w-12 h-10 bg-green-600 rounded-md border-2 border-green-800">
-                {/* Eye */}
-                <div className="absolute top-2 left-2 w-3 h-3 bg-yellow-300 border border-black overflow-hidden">
-                    <div className="w-1 h-3 bg-black absolute top-0 left-1"></div>
-                </div>
+            {/* Right Wing */}
+            <div className="absolute top-6 -right-8 w-12 h-10 origin-bottom-left animate-[pulse_1.5s_ease-in-out_infinite]" style={{ transform: 'scaleX(-1)' }}>
+                 <div className="absolute top-0 right-0 w-full h-1 bg-red-900 rounded-full -rotate-12"></div>
+                 <div className="absolute top-1 right-0 w-full h-full bg-red-600/90 rounded-bl-full border-l-2 border-red-900" style={{ clipPath: 'polygon(100% 0, 0 100%, 100% 100%)' }}></div>
+                 <div className="absolute top-2 right-2 w-2/3 h-2/3 bg-red-500/50 rounded-bl-full"></div>
+            </div>
+
+            {/* Tail */}
+            <div className="absolute bottom-4 -left-4 w-12 h-3 bg-green-700 rounded-full origin-right rotate-12"></div>
+            <div className="absolute bottom-4 -left-6 w-4 h-4 bg-red-600 rotate-45 border border-red-800"></div> {/* Tail Spike */}
+
+            {/* Body */}
+            <div className="absolute bottom-4 left-6 w-12 h-14 bg-green-700 rounded-b-xl border-x-2 border-green-900"></div>
+            {/* Belly Scales */}
+            <div className="absolute bottom-5 left-8 w-8 h-10 bg-yellow-400 opacity-90 rounded-b-lg flex flex-col gap-1 p-0.5">
+                <div className="w-full h-1 bg-yellow-600 opacity-30"></div>
+                <div className="w-full h-1 bg-yellow-600 opacity-30"></div>
+                <div className="w-full h-1 bg-yellow-600 opacity-30"></div>
+                <div className="w-full h-1 bg-yellow-600 opacity-30"></div>
+            </div>
+
+            {/* Head Neck */}
+            <div className="absolute top-6 left-8 w-8 h-8 bg-green-700"></div>
+
+            {/* Head */}
+            <div className="absolute top-0 left-5 w-14 h-12 bg-green-600 rounded-lg border-2 border-green-800 shadow-sm">
+                
                 {/* Snout */}
-                <div className="absolute top-3 -right-2 w-6 h-6 bg-green-600 rounded-r-md border-y-2 border-r-2 border-green-800">
-                    <div className="absolute top-1 right-2 w-1 h-1 bg-black rounded-full"></div>
+                <div className="absolute top-4 -right-2 w-6 h-6 bg-green-500 rounded-r-md border-y-2 border-r-2 border-green-800">
+                     <div className="absolute top-1 right-2 w-1.5 h-1.5 bg-black rounded-full"></div> {/* Nostril */}
                 </div>
+
+                {/* Eye */}
+                <div className="absolute top-2 left-4 w-4 h-4 bg-yellow-300 border border-black rounded-full overflow-hidden">
+                    <div className="w-1.5 h-4 bg-black absolute top-0 left-1.5"></div> {/* Vertical Pupil */}
+                </div>
+
                 {/* Horns */}
-                <div className="absolute -top-3 left-1 w-2 h-4 bg-white border border-slate-300"></div>
-                <div className="absolute -top-3 left-7 w-2 h-4 bg-white border border-slate-300"></div>
+                <div className="absolute -top-4 left-2 w-3 h-6 bg-white border border-slate-300 rounded-t-full -rotate-12"></div>
+                <div className="absolute -top-4 left-8 w-3 h-6 bg-white border border-slate-300 rounded-t-full rotate-12"></div>
             </div>
              
              {/* Fire Breath Animation */}
-             <div className="absolute top-6 -right-8 flex animate-pulse opacity-0 group-hover:opacity-100" style={{ animation: 'pulse 2s infinite' }}>
-                 <Flame size={20} className="text-orange-500 fill-yellow-400 rotate-90" />
+             <div className="absolute top-8 -right-8 animate-pulse" style={{ animationDuration: '0.5s' }}>
+                 <Flame size={24} className="text-orange-500 fill-yellow-400 rotate-90 drop-shadow-lg" />
+                 <div className="absolute top-0 left-4 w-2 h-2 bg-red-500 rounded-full animate-ping"></div>
              </div>
         </div>
     </div>
