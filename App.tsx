@@ -85,8 +85,8 @@ export default function App() {
   const [isSfxMuted, setIsSfxMuted] = useState(false);
   
   const musicRef = useRef<HTMLAudioElement>(null);
-  const sfxRef = useRef<HTMLAudioElement>(null);
-  
+  // Replaced sfxRef with AudioContext Logic
+
   // Track if game has started to allow autoplay after interaction
   const [hasStarted, setHasStarted] = useState(false); 
 
@@ -98,6 +98,42 @@ export default function App() {
   const animationFrameRef = useRef<number>(0);
   const nextSpawnTimeRef = useRef<number>(0);
 
+  // --- AUDIO LOGIC (Web Audio API) ---
+  // This guarantees sound works without external file dependencies for SFX
+  const playRetroShootSound = () => {
+    if (isSfxMuted) return;
+    
+    try {
+        const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+        if (!AudioContext) return;
+        
+        const ctx = new AudioContext();
+        
+        // Oscillator (The sound generator)
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        // Square wave = 8-bit retro sound
+        osc.type = 'square';
+        
+        // Frequency sweep (Pew pew sound)
+        osc.frequency.setValueAtTime(200, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(50, ctx.currentTime + 0.2);
+
+        // Volume envelope (Fade out)
+        gain.gain.setValueAtTime(0.2, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+
+        osc.start();
+        osc.stop(ctx.currentTime + 0.2);
+    } catch (e) {
+        console.error("Audio Context Error", e);
+    }
+  };
+
   // Background Music Logic
   useEffect(() => {
     if (!musicRef.current) return;
@@ -107,7 +143,7 @@ export default function App() {
         const playPromise = musicRef.current.play();
         if (playPromise !== undefined) {
             playPromise.catch(error => {
-                console.log("Audio autoplay prevented:", error);
+                console.log("Audio autoplay prevented (waiting for interaction):", error);
             });
         }
     } else {
@@ -115,15 +151,6 @@ export default function App() {
     }
   }, [hasStarted, isMusicMuted]);
 
-  // SFX Helper
-  const playHitSound = () => {
-    if (!isSfxMuted && sfxRef.current) {
-        // Clone the node to allow overlapping sounds (rapid fire)
-        const sound = sfxRef.current.cloneNode() as HTMLAudioElement;
-        sound.volume = 0.5;
-        sound.play().catch(e => console.log("SFX play failed:", e));
-    }
-  };
 
   // Transitions
   const enterShop = () => {
@@ -159,9 +186,11 @@ export default function App() {
   const startGame = () => {
     setHasStarted(true); 
     
-    // Explicitly try to play music on user interaction event
+    // Explicitly try to play music on user interaction event (Click)
     if (musicRef.current && !isMusicMuted) {
         musicRef.current.volume = 0.3;
+        // Resetting current time ensures it starts from beginning if it was stuck
+        musicRef.current.currentTime = 0;
         musicRef.current.play().catch(e => console.log("Start game music play failed:", e));
     }
 
@@ -279,7 +308,7 @@ export default function App() {
     if (targetIndex !== -1) {
       // HIT!
       const target = sortedEnemies[targetIndex];
-      playHitSound(); // Trigger SFX
+      playRetroShootSound(); // Trigger synthesized SFX
 
       setFeedbackEffect({ x: target.x, text: '💥', type: 'hit' });
       setTimeout(() => setFeedbackEffect(null), 500);
@@ -460,12 +489,7 @@ export default function App() {
         src="https://ia800104.us.archive.org/18/items/8-bit-loop/8-bit-loop.mp3" 
       />
       
-      {/* Attack SFX */}
-      <audio 
-        ref={sfxRef} 
-        preload="auto"
-        src="https://ia902302.us.archive.org/19/items/8-bit-sfx-pack/12_Explosion_02.mp3" 
-      />
+      {/* SFX audio tag removed - now using Web Audio API */}
 
       {/* --- NEW 8-BIT RETRO BACKGROUND --- */}
       <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden bg-gradient-to-b from-blue-400 via-indigo-300 to-pink-200">
