@@ -96,11 +96,6 @@ export default function App() {
   // Audio State
   const [isMusicMuted, setIsMusicMuted] = useState(false);
   const [isSfxMuted, setIsSfxMuted] = useState(false);
-  
-  const musicRef = useRef<HTMLAudioElement>(null);
-  // Replaced sfxRef with AudioContext Logic
-
-  // Track if game has started to allow autoplay after interaction
   const [hasStarted, setHasStarted] = useState(false); 
   
   // --- CHEAT CODE LOGIC ---
@@ -139,52 +134,91 @@ export default function App() {
   const nextSpawnTimeRef = useRef<number>(0);
 
   // --- AUDIO LOGIC (Web Audio API) ---
-  // This guarantees sound works without external file dependencies for SFX
+  const musicIntervalRef = useRef<number | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+
+  // Simple Synthesizer for SFX
   const playRetroShootSound = () => {
     if (isSfxMuted) return;
-    
     try {
-        const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-        if (!AudioContext) return;
-        
-        const ctx = new AudioContext();
-        
-        // Oscillator (The sound generator)
+        const Ctx = window.AudioContext || (window as any).webkitAudioContext;
+        if (!Ctx) return;
+        const ctx = audioContextRef.current || new Ctx();
+        if (!audioContextRef.current) audioContextRef.current = ctx;
+
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
-
         osc.connect(gain);
         gain.connect(ctx.destination);
-
-        // Square wave = 8-bit retro sound
         osc.type = 'square';
-        
-        // Frequency sweep (Pew pew sound)
         osc.frequency.setValueAtTime(200, ctx.currentTime);
         osc.frequency.exponentialRampToValueAtTime(50, ctx.currentTime + 0.2);
-
-        // Volume envelope (Fade out)
         gain.gain.setValueAtTime(0.2, ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
-
         osc.start();
         osc.stop(ctx.currentTime + 0.2);
     } catch (e) {
-        console.error("Audio Context Error", e);
+        console.error("SFX Error", e);
     }
   };
 
-  // Music Mute Toggle Logic
-  useEffect(() => {
-    if (!musicRef.current) return;
-    
-    if (isMusicMuted) {
-        musicRef.current.pause();
-    } else if (hasStarted) {
-        // Try to resume if it was playing and not muted
-        musicRef.current.play().catch(e => console.log("Resume failed", e));
+  // Procedural Music Player (Arpeggiator)
+  const toggleMusic = useCallback((play: boolean) => {
+    if (!play) {
+        if (musicIntervalRef.current) window.clearInterval(musicIntervalRef.current);
+        musicIntervalRef.current = null;
+        return;
     }
-  }, [isMusicMuted, hasStarted]);
+
+    // Don't start if already playing
+    if (musicIntervalRef.current) return;
+
+    try {
+        const Ctx = window.AudioContext || (window as any).webkitAudioContext;
+        if (!Ctx) return;
+        const ctx = audioContextRef.current || new Ctx();
+        if (!audioContextRef.current) audioContextRef.current = ctx;
+
+        // Resume context if suspended (browser policy)
+        if (ctx.state === 'suspended') ctx.resume();
+
+        // Arpeggio notes (C Major 7: C, E, G, B)
+        const notes = [261.63, 329.63, 392.00, 493.88]; 
+        let noteIndex = 0;
+
+        musicIntervalRef.current = window.setInterval(() => {
+             const osc = ctx.createOscillator();
+             const gain = ctx.createGain();
+             osc.connect(gain);
+             gain.connect(ctx.destination);
+
+             osc.type = 'triangle'; // Softer retro sound
+             osc.frequency.setValueAtTime(notes[noteIndex] / 2, ctx.currentTime); // Bass octave
+             
+             // ADSR Envelope
+             gain.gain.setValueAtTime(0, ctx.currentTime);
+             gain.gain.linearRampToValueAtTime(0.05, ctx.currentTime + 0.05); // Attack
+             gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4); // Decay
+
+             osc.start(ctx.currentTime);
+             osc.stop(ctx.currentTime + 0.4);
+
+             noteIndex = (noteIndex + 1) % notes.length;
+        }, 400); // 150bpm-ish tempo
+    } catch (e) {
+        console.error("Music Error", e);
+    }
+  }, []);
+
+  // Sync music state
+  useEffect(() => {
+    if (hasStarted && !isMusicMuted) {
+        toggleMusic(true);
+    } else {
+        toggleMusic(false);
+    }
+    return () => toggleMusic(false);
+  }, [hasStarted, isMusicMuted, toggleMusic]);
 
 
   // Transitions
@@ -220,20 +254,7 @@ export default function App() {
 
   const startGame = () => {
     setHasStarted(true); 
-    
-    // --- CRITICAL AUDIO FIX ---
-    // Play directly on user interaction event
-    if (musicRef.current && !isMusicMuted) {
-        musicRef.current.volume = 0.4;
-        musicRef.current.currentTime = 0;
-        const playPromise = musicRef.current.play();
-        if (playPromise !== undefined) {
-            playPromise.catch(error => {
-                console.error("Music playback failed:", error);
-            });
-        }
-    }
-
+    // Triggers music via useEffect
     setGameState(prev => ({
       ...prev,
       phase: 'playing',
@@ -520,14 +541,6 @@ export default function App() {
   return (
     // UPDATED: 'fixed inset-0 h-[100dvh]' prevents scrolling and respects mobile address bars
     <div className="fixed inset-0 w-full h-[100dvh] bg-sky-300 overflow-hidden flex flex-col font-sans select-none">
-      
-      {/* Background Music - New Source */}
-      <audio 
-        ref={musicRef} 
-        loop 
-        preload="auto"
-        src="https://opengameart.org/sites/default/files/Rolemusic_-_pl4y1ng.mp3" 
-      />
       
       {/* SFX audio tag removed - now using Web Audio API */}
 

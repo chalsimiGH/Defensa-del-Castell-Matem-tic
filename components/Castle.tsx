@@ -144,8 +144,8 @@ export const Castle: React.FC<CastleProps> = ({ health, maxHealth, isShaking, st
 
   return (
     <div className={`relative z-10 flex flex-col items-center ${isShaking ? 'animate-shake' : ''}`}>
-      {/* Health Bar */}
-      <div className="mb-4 md:mb-6 relative group z-20 scale-75 md:scale-100 origin-bottom">
+      {/* Health Bar - Moved MUCH higher (mb-28) to avoid Dragon overlap */}
+      <div className="mb-28 md:mb-32 relative group z-20 scale-75 md:scale-100 origin-bottom">
         <div className="absolute -inset-1 bg-gradient-to-r from-yellow-400 to-amber-600 rounded-lg blur opacity-50 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
         <div className="relative w-56 h-8 bg-slate-900 rounded-lg border-2 border-slate-700 overflow-hidden shadow-2xl">
              <div 
@@ -167,16 +167,16 @@ export const Castle: React.FC<CastleProps> = ({ health, maxHealth, isShaking, st
                 <Waves size={24} className="md:w-8 md:h-8" /> <Waves size={24} className="md:w-8 md:h-8" /> <Waves size={24} className="md:w-8 md:h-8" />
              </div>
              
-             {/* Gator Decoration - Blinking Eyes */}
+             {/* Gator Decoration - FIXED VISIBILITY (Added z-index and explicit opacity) */}
              {style.decorations.includes('gators') && (
                 <>
-                  <div className="absolute left-[20%] top-2 animate-bounce" style={{ animationDuration: '4s' }}>
-                      <div className="w-10 h-3 bg-green-800 rounded-full shadow-sm"></div>
+                  <div className="absolute left-[20%] top-2 z-10 animate-bounce" style={{ animationDuration: '4s' }}>
+                      <div className="w-10 h-3 bg-green-700 rounded-full shadow-sm border border-green-900"></div>
                       <div className="absolute -top-1 left-2 w-2 h-2 bg-yellow-400 rounded-full border border-black animate-[pulse_3s_infinite]"></div>
                       <div className="absolute -top-1 left-6 w-2 h-2 bg-yellow-400 rounded-full border border-black animate-[pulse_3s_infinite]"></div>
                   </div>
-                  <div className="absolute right-[20%] top-4 animate-bounce" style={{ animationDuration: '3s' }}>
-                      <div className="w-10 h-3 bg-green-800 rounded-full shadow-sm"></div>
+                  <div className="absolute right-[20%] top-4 z-10 animate-bounce" style={{ animationDuration: '3s' }}>
+                      <div className="w-10 h-3 bg-green-700 rounded-full shadow-sm border border-green-900"></div>
                       <div className="absolute -top-1 left-2 w-2 h-2 bg-yellow-400 rounded-full border border-black animate-[pulse_2.5s_infinite]"></div>
                       <div className="absolute -top-1 left-6 w-2 h-2 bg-yellow-400 rounded-full border border-black animate-[pulse_2.5s_infinite]"></div>
                   </div>
