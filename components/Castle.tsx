@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ShieldAlert, Flag, Flame, Flower, Waves, Shield, Cloud, Star } from 'lucide-react';
+import { ShieldAlert, Flag, Flame, Flower, Waves, Shield, Cloud, Star, Sword } from 'lucide-react';
 import { CastleStyle } from '../types';
 
 interface CastleProps {
@@ -81,6 +81,24 @@ const PixelDragon = () => {
     </div>
   );
 };
+
+// New Statue Component
+const StoneStatue = ({ flipped = false }: { flipped?: boolean }) => (
+    <div className={`flex flex-col items-center drop-shadow-2xl ${flipped ? '-scale-x-100' : ''}`}>
+        {/* Statue Figure */}
+        <div className="relative z-10 -mb-2">
+            <Sword size={32} className="text-slate-400 fill-slate-300 drop-shadow-md" strokeWidth={2.5} />
+            <div className="absolute bottom-0 -left-1">
+                <Shield size={24} className="text-slate-500 fill-slate-400" strokeWidth={2} />
+            </div>
+        </div>
+        {/* Pedestal */}
+        <div className="w-10 h-8 bg-gradient-to-b from-slate-500 to-slate-700 border-x-2 border-t-2 border-slate-400 rounded-sm shadow-lg flex flex-col items-center justify-center">
+            <div className="w-6 h-4 bg-slate-800 opacity-30 rounded-sm"></div>
+        </div>
+        <div className="w-14 h-2 bg-slate-800 rounded-full blur-[2px] mt-[-2px] z-0"></div>
+    </div>
+);
 
 
 export const Castle: React.FC<CastleProps> = ({ health, maxHealth, isShaking, style, isAttacking = false }) => {
@@ -324,27 +342,35 @@ export const Castle: React.FC<CastleProps> = ({ health, maxHealth, isShaking, st
             </>
         )}
 
-        {/* Royal Garden */}
+        {/* Royal Garden - MOVED FURTHER OUT */}
         {style.decorations.includes('garden') && (
             <>
-                <div className="absolute bottom-0 -left-12 md:-left-20 text-pink-500 z-50 scale-150 drop-shadow-md"><Flower size={32} fill="currentColor" /></div>
-                <div className="absolute bottom-0 -right-12 md:-right-20 text-purple-500 z-50 scale-150 drop-shadow-md"><Flower size={32} fill="currentColor" /></div>
-                <div className="absolute bottom-4 -left-4 text-green-500 z-50 scale-125 animate-bounce" style={{ animationDuration: '4s' }}><Flower size={20} fill="#fce7f3" /></div>
-                <div className="absolute bottom-4 -right-4 text-green-500 z-50 scale-125 animate-bounce" style={{ animationDuration: '3.5s' }}><Flower size={20} fill="#fce7f3" /></div>
-                <div className="absolute bottom-0 w-[120%] h-8 bg-green-700/80 rounded-full blur-md z-40"></div>
+                {/* Left Side Garden */}
+                <div className="absolute bottom-0 -left-16 md:-left-24 z-50 scale-125">
+                     <div className="absolute bottom-2 left-0 text-pink-500 drop-shadow-md animate-[bounce_3s_infinite]"><Flower size={28} fill="#fce7f3" /></div>
+                     <div className="absolute bottom-0 left-6 text-purple-600 drop-shadow-md"><Flower size={34} fill="#e9d5ff" /></div>
+                     <div className="absolute bottom-4 -left-4 text-green-500 animate-[pulse_4s_infinite]"><Flower size={20} fill="#bbf7d0" /></div>
+                     <div className="absolute bottom-[-5px] left-[-10px] w-24 h-6 bg-green-800/60 rounded-full blur-md -z-10"></div>
+                </div>
+
+                {/* Right Side Garden */}
+                <div className="absolute bottom-0 -right-16 md:-right-24 z-50 scale-125">
+                     <div className="absolute bottom-0 right-0 text-pink-600 drop-shadow-md"><Flower size={34} fill="#fce7f3" /></div>
+                     <div className="absolute bottom-3 right-8 text-purple-500 drop-shadow-md animate-[bounce_4s_infinite]"><Flower size={24} fill="#e9d5ff" /></div>
+                     <div className="absolute bottom-2 -right-4 text-green-500 animate-[pulse_3s_infinite]"><Flower size={20} fill="#bbf7d0" /></div>
+                     <div className="absolute bottom-[-5px] right-[-10px] w-24 h-6 bg-green-800/60 rounded-full blur-md -z-10"></div>
+                </div>
             </>
         )}
 
-        {/* Guardian Statues */}
+        {/* Guardian Statues - UPDATED VISUALS & MOVED CLOSER IN */}
         {style.decorations.includes('statues') && (
             <>
-                <div className="absolute bottom-0 -left-12 md:-left-20 text-slate-300 z-50 scale-150 drop-shadow-2xl">
-                   <Shield size={40} fill="currentColor" className="text-slate-600"/>
-                   <div className="absolute top-2 left-1/2 -translate-x-1/2 w-4 h-6 bg-slate-400/20 blur-sm rounded-full"></div>
+                <div className="absolute bottom-0 -left-4 md:-left-6 z-40 scale-125 origin-bottom">
+                   <StoneStatue />
                 </div>
-                <div className="absolute bottom-0 -right-12 md:-right-20 text-slate-300 z-50 scale-150 drop-shadow-2xl">
-                   <Shield size={40} fill="currentColor" className="text-slate-600"/>
-                   <div className="absolute top-2 left-1/2 -translate-x-1/2 w-4 h-6 bg-slate-400/20 blur-sm rounded-full"></div>
+                <div className="absolute bottom-0 -right-4 md:-right-6 z-40 scale-125 origin-bottom">
+                   <StoneStatue flipped />
                 </div>
             </>
         )}
