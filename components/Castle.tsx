@@ -119,7 +119,7 @@ export const Castle: React.FC<CastleProps> = ({ health, maxHealth, isShaking, st
         <div className={`absolute bottom-6 md:bottom-8 -right-2 md:-right-4 w-16 md:w-20 h-36 md:h-48 ${shadeClass.split(' ')[0]} rounded-t-lg z-0 opacity-80 scale-90`}></div>
 
         {/* Main Left Tower */}
-        <div className={`absolute bottom-0 left-2 md:left-4 w-16 md:w-24 h-40 sm:h-56 md:h-64 ${wallColor} border-r-4 md:border-r-8 border-black/10 rounded-t-lg flex flex-col items-center shadow-2xl overflow-hidden`}>
+        <div className={`absolute bottom-0 left-2 md:left-4 w-16 md:w-24 h-40 sm:h-56 md:h-64 ${wallColor} border-r-4 md:border-r-8 border-black/10 rounded-t-lg flex flex-col items-center shadow-2xl`}>
              <div className="w-20 md:w-28 h-4 md:h-6 bg-slate-700 absolute -top-1 md:-top-2 rounded-sm flex justify-between px-2 shadow-md z-20">
                 <div className="w-2 md:w-3 h-3 md:h-4 bg-slate-700 -mt-2 border-t border-slate-500"></div>
                 <div className="w-2 md:w-3 h-3 md:h-4 bg-slate-700 -mt-2 border-t border-slate-500"></div>
@@ -135,7 +135,7 @@ export const Castle: React.FC<CastleProps> = ({ health, maxHealth, isShaking, st
         </div>
 
         {/* Main Right Tower */}
-        <div className={`absolute bottom-0 right-2 md:right-4 w-16 md:w-24 h-40 sm:h-56 md:h-64 ${wallColor} border-l-4 md:border-l-8 border-black/10 rounded-t-lg flex flex-col items-center shadow-2xl overflow-hidden`}>
+        <div className={`absolute bottom-0 right-2 md:right-4 w-16 md:w-24 h-40 sm:h-56 md:h-64 ${wallColor} border-l-4 md:border-l-8 border-black/10 rounded-t-lg flex flex-col items-center shadow-2xl`}>
              <div className="w-20 md:w-28 h-4 md:h-6 bg-slate-700 absolute -top-1 md:-top-2 rounded-sm flex justify-between px-2 shadow-md z-20">
                 <div className="w-2 md:w-3 h-3 md:h-4 bg-slate-700 -mt-2 border-t border-slate-500"></div>
                 <div className="w-2 md:w-3 h-3 md:h-4 bg-slate-700 -mt-2 border-t border-slate-500"></div>

@@ -8,7 +8,52 @@ import { Shop } from './components/Shop';
 import { GameState, Enemy, EquationItem, Operator, ShopItem, EnemyType } from './types';
 import { INITIAL_HEALTH, getDifficultyConfig, ENEMY_TYPES } from './constants';
 import { evaluateEquation, generateTargetNumber } from './utils/mathEngine';
-import { Zap, Trophy, RotateCcw, ShoppingBag, ArrowRight, Star, Volume2, VolumeX, Music } from 'lucide-react';
+import { Trophy, RotateCcw, ShoppingBag, ArrowRight, Star, Volume2, VolumeX, Music } from 'lucide-react';
+
+// --- RETRO BACKGROUND HELPERS ---
+
+const PixelCloud = ({ className, delay = 0 }: { className?: string, delay?: number }) => (
+  <div 
+    className={`absolute opacity-80 ${className}`} 
+    style={{ animation: `float-slow ${30 + delay * 5}s linear infinite`, animationDelay: `-${delay * 10}s` }}
+  >
+     <div className="w-16 h-6 bg-white relative shadow-sm">
+        <div className="absolute -top-6 left-4 w-8 h-6 bg-white"></div>
+        <div className="absolute -top-4 left-8 w-10 h-10 bg-white"></div>
+        <div className="absolute top-2 left-2 w-12 h-4 bg-white"></div>
+     </div>
+  </div>
+);
+
+const PixelTree = ({ className, scale = 1 }: { className?: string, scale?: number }) => (
+    <div className={`absolute flex flex-col items-center pointer-events-none z-10 ${className}`} style={{ transform: `scale(${scale})` }}>
+        {/* Leaves - Pyramid of blocks */}
+        <div className="w-4 h-4 bg-emerald-300/40 absolute -top-2 -left-2 rounded-full blur-xl"></div>
+        <div className="w-2 h-4 bg-emerald-800"></div>
+        <div className="w-8 h-4 bg-emerald-700"></div>
+        <div className="w-14 h-4 bg-emerald-800"></div>
+        <div className="w-10 h-4 bg-emerald-700"></div>
+        <div className="w-20 h-4 bg-emerald-600"></div>
+        <div className="w-16 h-4 bg-emerald-700"></div>
+        <div className="w-28 h-4 bg-emerald-600"></div>
+        <div className="w-24 h-4 bg-emerald-700"></div>
+        <div className="w-32 h-4 bg-emerald-600"></div>
+        
+        {/* Trunk */}
+        <div className="w-6 h-8 bg-amber-900 border-x-4 border-amber-950"></div>
+    </div>
+);
+
+const PixelMountain = () => (
+    <svg className="absolute bottom-0 w-full h-[60%] pointer-events-none opacity-60" preserveAspectRatio="none" viewBox="0 0 100 100">
+        {/* Rear Mountains (Purple/Dark) */}
+        <path d="M0,100 L0,70 L5,70 L5,60 L10,60 L10,45 L15,45 L15,35 L20,35 L20,40 L25,40 L25,50 L30,50 L30,65 L35,65 L35,80 L40,80 L40,60 L45,60 L45,40 L50,40 L50,30 L55,30 L55,45 L60,45 L60,70 L65,70 L65,85 L70,85 L70,60 L75,60 L75,50 L80,50 L80,65 L85,65 L85,45 L90,45 L90,60 L95,60 L95,80 L100,80 L100,100 Z" fill="#475569" />
+        
+        {/* Front Mountains (Blueish) */}
+        <path d="M0,100 L0,85 L8,85 L8,75 L15,75 L15,65 L22,65 L22,75 L30,75 L30,85 L38,85 L38,70 L45,70 L45,60 L52,60 L52,70 L60,70 L60,80 L68,80 L68,65 L75,65 L75,55 L82,55 L82,65 L90,65 L90,80 L95,80 L95,90 L100,90 L100,100 Z" fill="#64748b" opacity="0.8" />
+    </svg>
+);
+
 
 export default function App() {
   // Game State
@@ -24,7 +69,6 @@ export default function App() {
     castleStyle: {
       wallColor: 'bg-slate-400',
       flagType: 'classic',
-      // UPDATED: Array for multiple decorations
       decorations: ['cannons']
     }
   });
@@ -56,32 +100,28 @@ export default function App() {
 
   // Background Music Logic
   useEffect(() => {
-    if (musicRef.current) {
-        if (hasStarted && !isMusicMuted) {
-            // Promise handling for browsers that block autoplay
-            const playPromise = musicRef.current.play();
-            if (playPromise !== undefined) {
-                playPromise
-                    .then(() => {
-                        // Playback started
-                        if (musicRef.current) musicRef.current.volume = 0.3;
-                    })
-                    .catch(error => {
-                        console.log("Audio autoplay prevented by browser:", error);
-                    });
-            }
-        } else {
-            musicRef.current.pause();
+    if (!musicRef.current) return;
+
+    if (hasStarted && !isMusicMuted) {
+        musicRef.current.volume = 0.3;
+        const playPromise = musicRef.current.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(error => {
+                console.log("Audio autoplay prevented:", error);
+            });
         }
+    } else {
+        musicRef.current.pause();
     }
   }, [hasStarted, isMusicMuted]);
 
   // SFX Helper
   const playHitSound = () => {
     if (!isSfxMuted && sfxRef.current) {
-        sfxRef.current.currentTime = 0;
-        sfxRef.current.volume = 0.5;
-        sfxRef.current.play().catch(e => console.log("SFX play failed:", e));
+        // Clone the node to allow overlapping sounds (rapid fire)
+        const sound = sfxRef.current.cloneNode() as HTMLAudioElement;
+        sound.volume = 0.5;
+        sound.play().catch(e => console.log("SFX play failed:", e));
     }
   };
 
@@ -117,7 +157,14 @@ export default function App() {
   };
 
   const startGame = () => {
-    setHasStarted(true); // This triggers the useEffect for music
+    setHasStarted(true); 
+    
+    // Explicitly try to play music on user interaction event
+    if (musicRef.current && !isMusicMuted) {
+        musicRef.current.volume = 0.3;
+        musicRef.current.play().catch(e => console.log("Start game music play failed:", e));
+    }
+
     setGameState(prev => ({
       ...prev,
       phase: 'playing',
@@ -405,51 +452,51 @@ export default function App() {
     // UPDATED: 'fixed inset-0 h-[100dvh]' prevents scrolling and respects mobile address bars
     <div className="fixed inset-0 w-full h-[100dvh] bg-sky-300 overflow-hidden flex flex-col font-sans select-none">
       
-      {/* Background Music - Added crossorigin and preload */}
+      {/* Background Music */}
       <audio 
         ref={musicRef} 
         loop 
         preload="auto"
-        crossOrigin="anonymous"
         src="https://ia800104.us.archive.org/18/items/8-bit-loop/8-bit-loop.mp3" 
       />
       
-      {/* Attack SFX - Added crossorigin and preload */}
+      {/* Attack SFX */}
       <audio 
         ref={sfxRef} 
         preload="auto"
-        crossOrigin="anonymous"
         src="https://ia902302.us.archive.org/19/items/8-bit-sfx-pack/12_Explosion_02.mp3" 
       />
 
-      {/* Background Decor */}
-      <div className="absolute inset-0 pointer-events-none z-0">
-        <div className="absolute top-10 left-20 text-white/40 animate-pulse"><Zap size={64} /></div>
-        <div className="absolute top-24 right-40 text-white/40 animate-pulse delay-700"><Zap size={48} /></div>
+      {/* --- NEW 8-BIT RETRO BACKGROUND --- */}
+      <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden bg-gradient-to-b from-blue-400 via-indigo-300 to-pink-200">
         
-        {/* Ground */}
-        <div className="absolute bottom-0 w-full h-1/3 bg-gradient-to-t from-green-800 to-green-500"></div>
-        
-        {/* SVG Path Visual */}
-        <svg className="absolute bottom-0 left-0 w-full h-full pointer-events-none" preserveAspectRatio="none">
-             <path 
-                d="M 100% 90% C 70% 90%, 60% 60%, 50% 72%" 
-                stroke="#78350f" 
-                strokeWidth="60" 
-                fill="none" 
-                strokeLinecap="round"
-                className="opacity-50"
-             />
-             <path 
-                d="M 100% 90% C 70% 90%, 60% 60%, 50% 72%" 
-                stroke="#92400e" 
-                strokeWidth="40" 
-                fill="none" 
-                strokeLinecap="round"
-                strokeDasharray="20 10"
-             />
-        </svg>
+        {/* Sun (Pixel Square) */}
+        <div className="absolute top-10 right-10 w-16 h-16 bg-yellow-300 border-4 border-yellow-500 shadow-lg animate-pulse"></div>
+
+        {/* Pixel Clouds */}
+        <PixelCloud className="top-20 -left-20" delay={0} />
+        <PixelCloud className="top-40 -left-40 scale-75" delay={1} />
+        <PixelCloud className="top-10 -left-10 scale-50 opacity-50" delay={2} />
+
+        {/* 8-Bit Mountains */}
+        <PixelMountain />
+
+        {/* Pixel Trees - Scattered randomly */}
+        <PixelTree className="bottom-[33%] left-[5%] opacity-90" scale={0.8} />
+        <PixelTree className="bottom-[33%] left-[15%]" scale={1.2} />
+        <PixelTree className="bottom-[33%] left-[85%]" scale={1} />
+        <PixelTree className="bottom-[33%] left-[95%] opacity-80" scale={0.6} />
+
+        {/* Ground with pixel grass border */}
+        <div className="absolute bottom-0 w-full h-1/3 bg-green-600">
+             {/* Pixel Grass Border Top */}
+             <div className="absolute -top-4 w-full h-4 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgdmlld0JveD0iMCAwIDIwIDIwIiBmaWxsPSJub25lIj48cmVjdCB4PSIwIiB5PSIxMCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjEwIiBmaWxsPSIjMTY2NTM0Ii8+PHJlY3QgeD0iMTAiIHk9IjAiIHdpZHRoPSIxMCIgaGVpZ2h0PSIyMCIgZmlsbD0iIzE2NjUzNCIvPjwvc3ZnPg==')] bg-repeat-x"></div>
+             {/* Gradient Overlay for depth */}
+             <div className="absolute inset-0 bg-gradient-to-t from-green-900 via-green-800 to-transparent opacity-60"></div>
+        </div>
+
       </div>
+      {/* --- END BACKGROUND --- */}
 
       {/* Top Stats Bar */}
       <div className="relative z-30 flex flex-col gap-2 p-2 md:p-4 shrink-0">

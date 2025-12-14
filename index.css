@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -21,6 +22,17 @@
   .transform-style-3d {
     transform-style: preserve-3d;
   }
+}
+
+@keyframes float {
+    0% { transform: translateX(0px); }
+    50% { transform: translateX(20px); }
+    100% { transform: translateX(0px); }
+}
+
+@keyframes float-slow {
+    0% { transform: translateX(-10%); }
+    100% { transform: translateX(110%); }
 }
 
 body {
