@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ShieldAlert, Flag, Flame, Flower, Waves, Bird, Shield, Cloud, Star } from 'lucide-react';
 import { CastleStyle } from '../types';
@@ -126,7 +127,7 @@ export const Castle: React.FC<CastleProps> = ({ health, maxHealth, isShaking, st
              </div>
              <div className="w-4 md:w-6 h-6 md:h-10 bg-slate-900 rounded-t-full mt-8 md:mt-12 border-2 md:border-4 border-slate-600 shadow-inner"></div>
              
-             {/* Flag */}
+             {/* Flag - UPDATED: Ensure it renders with unique key prop if needed and uses style.flagType directly */}
              <div className="absolute -top-10 md:-top-14 left-1/2 -translate-x-1/2 origin-bottom animate-wiggle z-10 scale-90 md:scale-110">
                  {renderFlag('text-blue-500 fill-blue-300')} 
                  <div className="h-14 w-1 bg-slate-800 mx-auto"></div>
@@ -157,8 +158,8 @@ export const Castle: React.FC<CastleProps> = ({ health, maxHealth, isShaking, st
                 <div className="w-3 md:w-5 h-3 md:h-5 bg-slate-700 -mt-2 border-t border-slate-500"></div>
                 <div className="w-3 md:w-5 h-3 md:h-5 bg-slate-700 -mt-2 border-t border-slate-500"></div>
 
-                {/* UPDATED: New 3D Cannons using helper component */}
-                {style.decoration === 'cannons' && (
+                {/* UPDATED: Check array for cannons */}
+                {style.decorations.includes('cannons') && (
                   <>
                     <RenderCannon side="left" />
                     <RenderCannon side="right" />
@@ -180,10 +181,10 @@ export const Castle: React.FC<CastleProps> = ({ health, maxHealth, isShaking, st
           </div>
         </div>
 
-        {/* --- DECORATIONS RENDERING (MOVED OUTSIDE TOWERS TO PREVENT CLIPPING) --- */}
+        {/* --- DECORATIONS RENDERING (UPDATED TO CHECK ARRAY) --- */}
         
         {/* Torches */}
-        {style.decoration === 'torches' && (
+        {style.decorations.includes('torches') && (
             <>
                 <div className="absolute bottom-32 md:bottom-48 left-4 md:left-8 animate-pulse text-orange-500 drop-shadow-[0_0_15px_orange] z-50 scale-125"><Flame fill="orange" /></div>
                 <div className="absolute bottom-32 md:bottom-48 right-4 md:right-8 animate-pulse text-orange-500 drop-shadow-[0_0_15px_orange] z-50 scale-125"><Flame fill="orange" /></div>
@@ -191,7 +192,7 @@ export const Castle: React.FC<CastleProps> = ({ health, maxHealth, isShaking, st
         )}
         
         {/* Vines */}
-        {style.decoration === 'vines' && (
+        {style.decorations.includes('vines') && (
             <>
                 <div className="absolute bottom-0 -left-6 text-green-800 z-50 scale-150"><Flower size={32} /></div>
                 <div className="absolute bottom-20 md:bottom-32 left-0 text-green-700 z-50 -rotate-12 scale-125"><Flower size={20} /></div>
@@ -204,7 +205,7 @@ export const Castle: React.FC<CastleProps> = ({ health, maxHealth, isShaking, st
         )}
 
         {/* Royal Garden */}
-        {style.decoration === 'garden' && (
+        {style.decorations.includes('garden') && (
             <>
                 <div className="absolute bottom-0 -left-12 md:-left-20 text-pink-500 z-50 scale-150 drop-shadow-md"><Flower size={32} fill="currentColor" /></div>
                 <div className="absolute bottom-0 -right-12 md:-right-20 text-purple-500 z-50 scale-150 drop-shadow-md"><Flower size={32} fill="currentColor" /></div>
@@ -215,7 +216,7 @@ export const Castle: React.FC<CastleProps> = ({ health, maxHealth, isShaking, st
         )}
 
         {/* Guardian Statues */}
-        {style.decoration === 'statues' && (
+        {style.decorations.includes('statues') && (
             <>
                 <div className="absolute bottom-0 -left-12 md:-left-20 text-slate-300 z-50 scale-150 drop-shadow-2xl">
                    <Shield size={40} fill="currentColor" className="text-slate-600"/>
@@ -228,8 +229,8 @@ export const Castle: React.FC<CastleProps> = ({ health, maxHealth, isShaking, st
             </>
         )}
 
-        {/* Pet Dragon - Now positioned relative to container to avoid clip */}
-        {style.decoration === 'dragon' && (
+        {/* Pet Dragon */}
+        {style.decorations.includes('dragon') && (
              <div className="absolute bottom-40 md:bottom-64 left-0 md:-left-4 animate-bounce z-50" style={{ animationDuration: '3s' }}>
                 <Bird className="text-red-600 drop-shadow-2xl w-16 h-16 md:w-24 md:h-24 transform -scale-x-100" strokeWidth={2} fill="#ea580c"/>
                 <div className="absolute top-1/2 -left-4 w-4 h-4 bg-orange-500 blur-sm rounded-full animate-pulse"></div>

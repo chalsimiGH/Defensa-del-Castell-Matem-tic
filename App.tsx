@@ -20,13 +20,12 @@ export default function App() {
     health: INITIAL_HEALTH,
     maxHealth: INITIAL_HEALTH,
     currency: 0,
-    // UPDATED: Start with cannons unlocked
-    unlockedItems: ['color_slate', 'flag_classic', 'deco_cannons', 'deco_none'],
+    unlockedItems: ['color_slate', 'flag_classic', 'deco_cannons'],
     castleStyle: {
       wallColor: 'bg-slate-400',
       flagType: 'classic',
-      // UPDATED: Start with cannons equipped
-      decoration: 'cannons'
+      // UPDATED: Array for multiple decorations
+      decorations: ['cannons']
     }
   });
 
@@ -58,9 +57,19 @@ export default function App() {
   // Background Music Logic
   useEffect(() => {
     if (musicRef.current) {
-        musicRef.current.volume = 0.3; // Set background volume to 30%
         if (hasStarted && !isMusicMuted) {
-            musicRef.current.play().catch(e => console.log("Audio play failed:", e));
+            // Promise handling for browsers that block autoplay
+            const playPromise = musicRef.current.play();
+            if (playPromise !== undefined) {
+                playPromise
+                    .then(() => {
+                        // Playback started
+                        if (musicRef.current) musicRef.current.volume = 0.3;
+                    })
+                    .catch(error => {
+                        console.log("Audio autoplay prevented by browser:", error);
+                    });
+            }
         } else {
             musicRef.current.pause();
         }
@@ -108,7 +117,7 @@ export default function App() {
   };
 
   const startGame = () => {
-    setHasStarted(true); // Enable music
+    setHasStarted(true); // This triggers the useEffect for music
     setGameState(prev => ({
       ...prev,
       phase: 'playing',
@@ -125,29 +134,62 @@ export default function App() {
     nextSpawnTimeRef.current = performance.now() + 2000;
   };
 
+  // Logic to handle buying an item
   const handleBuyItem = (item: ShopItem) => {
     if (gameState.currency >= item.cost && !gameState.unlockedItems.includes(item.id)) {
-      setGameState(prev => ({
-        ...prev,
-        currency: prev.currency - item.cost,
-        unlockedItems: [...prev.unlockedItems, item.id],
-        // UPDATED: Auto-equip the item upon purchase for instant feedback
-        castleStyle: {
-            ...prev.castleStyle,
-            [item.type]: item.value
+      setGameState(prev => {
+        // Logic for auto-equipping after purchase
+        let newStyle = { ...prev.castleStyle };
+        
+        if (item.type === 'decoration') {
+            // For decorations, we add to the array (stackable)
+            if (!newStyle.decorations.includes(item.value) && item.value !== 'none') {
+                newStyle.decorations = [...newStyle.decorations, item.value];
+            }
+        } else {
+            // For walls and flags, we replace (exclusive)
+            // @ts-ignore - dynamic key access
+            newStyle[item.type] = item.value;
         }
-      }));
+
+        return {
+          ...prev,
+          currency: prev.currency - item.cost,
+          unlockedItems: [...prev.unlockedItems, item.id],
+          castleStyle: newStyle
+        };
+      });
     }
   };
 
+  // Logic to handle equipping/unequipping items
   const handleEquipItem = (item: ShopItem) => {
-    setGameState(prev => ({
-      ...prev,
-      castleStyle: {
-        ...prev.castleStyle,
-        [item.type]: item.value
-      }
-    }));
+    setGameState(prev => {
+        let newStyle = { ...prev.castleStyle };
+
+        if (item.type === 'decoration') {
+            if (item.value === 'none') {
+                 // Clicking "none" clears all decorations
+                 newStyle.decorations = [];
+            } else {
+                // Toggle logic: If equipped, remove it. If not, add it.
+                if (newStyle.decorations.includes(item.value)) {
+                    newStyle.decorations = newStyle.decorations.filter(d => d !== item.value);
+                } else {
+                    newStyle.decorations = [...newStyle.decorations, item.value];
+                }
+            }
+        } else {
+            // Exclusive logic for walls and flags
+            // @ts-ignore
+            newStyle[item.type] = item.value;
+        }
+
+        return {
+            ...prev,
+            castleStyle: newStyle
+        };
+    });
   };
 
   const difficulty = getDifficultyConfig(gameState.level);
@@ -363,12 +405,22 @@ export default function App() {
     // UPDATED: 'fixed inset-0 h-[100dvh]' prevents scrolling and respects mobile address bars
     <div className="fixed inset-0 w-full h-[100dvh] bg-sky-300 overflow-hidden flex flex-col font-sans select-none">
       
-      {/* Background Music */}
-      {/* Royalty free 8-bit loop */}
-      <audio ref={musicRef} loop src="https://ia800104.us.archive.org/18/items/8-bit-loop/8-bit-loop.mp3" />
+      {/* Background Music - Added crossorigin and preload */}
+      <audio 
+        ref={musicRef} 
+        loop 
+        preload="auto"
+        crossOrigin="anonymous"
+        src="https://ia800104.us.archive.org/18/items/8-bit-loop/8-bit-loop.mp3" 
+      />
       
-      {/* Attack SFX */}
-      <audio ref={sfxRef} src="https://ia902302.us.archive.org/19/items/8-bit-sfx-pack/12_Explosion_02.mp3" />
+      {/* Attack SFX - Added crossorigin and preload */}
+      <audio 
+        ref={sfxRef} 
+        preload="auto"
+        crossOrigin="anonymous"
+        src="https://ia902302.us.archive.org/19/items/8-bit-sfx-pack/12_Explosion_02.mp3" 
+      />
 
       {/* Background Decor */}
       <div className="absolute inset-0 pointer-events-none z-0">

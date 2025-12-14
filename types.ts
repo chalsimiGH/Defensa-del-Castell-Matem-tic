@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 export type Operator = '+' | '-' | '×' | '÷';
@@ -20,7 +21,8 @@ export type GamePhase = 'tutorial' | 'playing' | 'level_complete' | 'shop' | 'ga
 export interface CastleStyle {
   wallColor: string;
   flagType: 'classic' | 'royal' | 'pirate';
-  decoration: 'none' | 'vines' | 'torches' | 'garden' | 'statues' | 'cannons' | 'dragon';
+  // UPDATED: Now an array of strings to allow multiple decorations
+  decorations: string[];
 }
 
 export interface ShopItem {

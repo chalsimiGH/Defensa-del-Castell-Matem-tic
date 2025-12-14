@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { X, Check, Lock, ShoppingBag, Flag, Flame, Flower, Shield, Bird, Ban, Bomb } from 'lucide-react';
 import { SHOP_ITEMS } from '../constants';
@@ -29,7 +30,7 @@ export const Shop: React.FC<ShopProps> = ({
   const isEquipped = (item: ShopItem) => {
     if (item.type === 'wallColor') return currentStyle.wallColor === item.value;
     if (item.type === 'flagType') return currentStyle.flagType === item.value;
-    if (item.type === 'decoration') return currentStyle.decoration === item.value;
+    if (item.type === 'decoration') return currentStyle.decorations.includes(item.value);
     return false;
   };
 
@@ -108,6 +109,10 @@ export const Shop: React.FC<ShopProps> = ({
                   const unlocked = unlockedItems.includes(item.id);
                   const equipped = isEquipped(item);
                   const canAfford = currency >= item.cost;
+                  // Special check for 'none' decoration
+                  const isNone = item.value === 'none' && item.type === 'decoration';
+                  // Decorations are toggleable (except 'none'), others are exclusive (so "Equipped" means active)
+                  const isToggleType = item.type === 'decoration';
 
                   return (
                     <div 
@@ -147,14 +152,21 @@ export const Shop: React.FC<ShopProps> = ({
                             )}
 
                             {/* Action Button */}
-                            {equipped ? (
-                                <span className="text-xs font-bold text-green-400 uppercase tracking-wider">Equipat</span>
-                            ) : unlocked ? (
+                            {unlocked ? (
                                 <button 
                                 onClick={() => onEquip(item)}
-                                className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-md active:translate-y-0.5 uppercase tracking-wide"
+                                className={`px-3 py-1.5 rounded-lg text-xs font-bold shadow-md active:translate-y-0.5 uppercase tracking-wide
+                                    ${equipped 
+                                        ? isToggleType && !isNone 
+                                            ? 'bg-red-500 hover:bg-red-600 text-white' // Toggle off
+                                            : 'bg-green-600 text-white cursor-default' // Active/Exclusive
+                                        : 'bg-blue-600 hover:bg-blue-500 text-white' // Equip/Toggle on
+                                    }`}
                                 >
-                                Posar
+                                {equipped 
+                                    ? isToggleType && !isNone ? 'Treure' : 'Actiu'
+                                    : isNone ? 'Netejar' : 'Posar'
+                                }
                                 </button>
                             ) : (
                                 <button 
