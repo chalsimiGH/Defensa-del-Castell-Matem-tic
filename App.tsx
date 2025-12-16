@@ -5,10 +5,12 @@ import { EnemyRenderer } from './components/EnemyRenderer';
 import { ControlPanel } from './components/ControlPanel';
 import { Tutorial } from './components/Tutorial';
 import { Shop } from './components/Shop';
-import { GameState, Enemy, EquationItem, Operator, ShopItem, EnemyType } from './types';
+import { GameState, Enemy, EquationItem, Operator, ShopItem, EnemyType, LeaderboardEntry } from './types';
 import { INITIAL_HEALTH, getDifficultyConfig, ENEMY_TYPES } from './constants';
 import { evaluateEquation, generateTargetNumber } from './utils/mathEngine';
-import { Trophy, RotateCcw, ShoppingBag, ArrowRight, Star, Volume2, VolumeX, Music, Skull, Heart } from 'lucide-react';
+import { Trophy, RotateCcw, ShoppingBag, ArrowRight, Star, Volume2, VolumeX, Music, Skull, Heart, Save, List, Loader2, Globe, WifiOff } from 'lucide-react';
+import { db } from './firebaseConfig';
+import { collection, addDoc, getDocs, query, orderBy, limit } from 'firebase/firestore';
 
 // --- VISUAL COMPONENTS ---
 
@@ -112,6 +114,80 @@ export default function App() {
   const [isSfxMuted, setIsSfxMuted] = useState(false);
   const [hasStarted, setHasStarted] = useState(false); 
   
+  // Leaderboard State
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [playerName, setPlayerName] = useState('');
+  const [scoreSaved, setScoreSaved] = useState(false);
+  const [isSavingScore, setIsSavingScore] = useState(false);
+  const [isOnline, setIsOnline] = useState(false); // Track if using Firebase or Local
+
+  // Fetch Leaderboard from Firebase (with Fallback)
+  const fetchLeaderboard = useCallback(async () => {
+    try {
+        const leaderboardRef = collection(db, "leaderboard");
+        // Query top 10 scores
+        const q = query(leaderboardRef, orderBy("score", "desc"), limit(10));
+        const querySnapshot = await getDocs(q);
+        
+        const fetchedData: LeaderboardEntry[] = [];
+        querySnapshot.forEach((doc) => {
+            fetchedData.push(doc.data() as LeaderboardEntry);
+        });
+        setLeaderboard(fetchedData);
+        setIsOnline(true);
+    } catch (error) {
+        console.warn("Firebase unavailable, switching to local leaderboard:", error);
+        setIsOnline(false);
+        // Fallback to local storage
+        const saved = localStorage.getItem('math_castle_leaderboard');
+        if (saved) {
+            try {
+                setLeaderboard(JSON.parse(saved));
+            } catch(e) { console.error("Error parsing local leaderboard"); }
+        }
+    }
+  }, []);
+
+  // Load Leaderboard on mount
+  useEffect(() => {
+    fetchLeaderboard();
+  }, [fetchLeaderboard]);
+
+  const handleSaveScore = async () => {
+      if (!playerName.trim()) return;
+      setIsSavingScore(true);
+
+      const newEntry: LeaderboardEntry = {
+          name: playerName.substring(0, 15), // Limit name length
+          score: gameState.score,
+          level: gameState.level,
+          date: Date.now()
+      };
+
+      try {
+          // Attempt Save to Firebase
+          await addDoc(collection(db, "leaderboard"), newEntry);
+          // Refresh
+          await fetchLeaderboard();
+          setScoreSaved(true);
+      } catch (e) {
+          console.warn("Error saving score to Firebase, saving locally: ", e);
+          
+          // Fallback: Save to Local Storage
+          const currentLeaderboard = leaderboard;
+          const newLeaderboard = [...currentLeaderboard, newEntry]
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 10);
+          
+          setLeaderboard(newLeaderboard);
+          localStorage.setItem('math_castle_leaderboard', JSON.stringify(newLeaderboard));
+          setScoreSaved(true);
+          setIsOnline(false);
+      } finally {
+          setIsSavingScore(false);
+      }
+  };
+
   // --- CHEAT CODE LOGIC ---
   const [cheatClicks, setCheatClicks] = useState(0);
   const cheatTimerRef = useRef<number | null>(null);
@@ -289,13 +365,18 @@ export default function App() {
   // Transitions
   const enterShop = () => {
     setGameState(prev => ({ ...prev, phase: 'shop' }));
-    setEnemies([]); // Clear enemies when entering shop to be safe
+    // Do NOT clear enemies to preserve Boss state
     setInkEffect(false);
   };
 
   const closeShop = () => {
     // If we were in level_complete, go back there. Otherwise go to playing.
     const enemiesTarget = getEnemiesPerLevel(gameState.level);
+    
+    // Reset time trackers to prevent frame jumps or instant attacks upon resuming
+    lastUpdateRef.current = performance.now();
+    lastBossAttackRef.current = performance.now();
+
     if (gameState.enemiesDefeated >= enemiesTarget) {
         setGameState(prev => ({ ...prev, phase: 'level_complete' }));
     } else {
@@ -335,6 +416,8 @@ export default function App() {
     setEquation([]);
     setEvaluatedResult(null);
     setInkEffect(false);
+    setScoreSaved(false); // Reset saved status
+    setPlayerName(''); // Reset name
     lastUpdateRef.current = performance.now();
     nextSpawnTimeRef.current = performance.now() + 2000;
   };
@@ -462,6 +545,9 @@ export default function App() {
           // BOSS HIT, BUT NOT DEAD
           setFeedbackEffect({ x: target.x, text: '💥', type: 'hit' });
           setTimeout(() => setFeedbackEffect(null), 500);
+
+          // Reset Boss Attack Timer (Reward for hitting the boss)
+          lastBossAttackRef.current = performance.now();
 
           const newTargetValue = generateTargetNumber(difficulty.numberRange.min, difficulty.numberRange.max);
           
@@ -899,27 +985,114 @@ export default function App() {
 
       {gameState.phase === 'gameover' && (
         <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-            <div className="bg-white p-8 rounded-3xl shadow-2xl max-w-md w-full text-center border-8 border-red-500 animate-in zoom-in">
-                <h1 className="text-4xl font-extrabold text-red-600 mb-2">
-                    Castell Derrotat!
-                </h1>
-                <p className="text-slate-500 mb-8 text-lg">
-                   Has sobreviscut fins al nivell <span className="font-bold text-slate-900">{gameState.level}</span><br/>
-                   Puntuació final: <span className="font-bold text-slate-900">{gameState.score}</span>
-                </p>
+            <div className="bg-slate-900 rounded-3xl p-6 md:p-8 w-full max-w-2xl h-[90vh] flex flex-col shadow-2xl border-4 border-red-500 animate-in zoom-in overflow-hidden">
+                
+                {/* Score Registration Section (Only if not saved) */}
+                {!scoreSaved ? (
+                  <div className="flex flex-col items-center justify-center flex-shrink-0 mb-6">
+                      <h1 className="text-4xl font-black text-red-500 mb-2 uppercase drop-shadow-md tracking-wider">
+                          Castell Derrotat!
+                      </h1>
+                      <div className="flex gap-8 mb-6 bg-slate-800 p-4 rounded-xl border border-slate-700 w-full justify-center">
+                          <div className="text-center">
+                              <p className="text-slate-400 text-sm uppercase font-bold">Nivell</p>
+                              <p className="text-3xl font-black text-white">{gameState.level}</p>
+                          </div>
+                          <div className="text-center border-l border-slate-700 pl-8">
+                              <p className="text-slate-400 text-sm uppercase font-bold">Punts</p>
+                              <p className="text-3xl font-black text-yellow-400">{gameState.score}</p>
+                          </div>
+                      </div>
 
-                <div className="flex flex-col gap-3">
+                      <div className="w-full bg-slate-800 p-6 rounded-2xl border-2 border-slate-700 shadow-xl">
+                          <p className="text-white font-bold mb-3 flex items-center gap-2">
+                            <Trophy size={20} className="text-yellow-400"/> 
+                            {isOnline ? 'Registra la teva fita global:' : 'Registra la teva fita (Mode Local):'}
+                          </p>
+                          <div className="flex gap-2">
+                              <input 
+                                  type="text" 
+                                  value={playerName}
+                                  onChange={(e) => setPlayerName(e.target.value)}
+                                  placeholder="El teu nom..." 
+                                  maxLength={15}
+                                  disabled={isSavingScore}
+                                  className="flex-1 bg-slate-950 border-2 border-slate-600 text-white rounded-xl px-4 py-3 font-bold focus:border-blue-500 outline-none placeholder:text-slate-600 disabled:opacity-50"
+                              />
+                              <button 
+                                  onClick={handleSaveScore}
+                                  disabled={!playerName.trim() || isSavingScore}
+                                  className="bg-green-600 hover:bg-green-500 disabled:bg-slate-700 disabled:text-slate-500 text-white font-bold px-6 py-3 rounded-xl transition-colors shadow-lg flex items-center gap-2"
+                              >
+                                  {isSavingScore ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />} 
+                                  Guardar
+                              </button>
+                          </div>
+                      </div>
+                  </div>
+                ) : (
+                  // Leaderboard View
+                  <div className="flex flex-col flex-1 min-h-0 mb-6">
+                      <div className="flex items-center justify-center gap-3 mb-4">
+                          <List size={32} className="text-yellow-400" />
+                          <h2 className="text-2xl md:text-3xl font-black text-white uppercase tracking-wide">
+                            {isOnline ? 'Rànquing Mundial' : 'Rànquing Local'}
+                          </h2>
+                          {isOnline ? (
+                            <Globe size={20} className="text-green-400" title="Connectat al Món" />
+                          ) : (
+                            <WifiOff size={20} className="text-slate-500" title="Sense connexió / Mode Offline" />
+                          )}
+                      </div>
+                      
+                      <div className="bg-slate-950 rounded-xl border border-slate-800 overflow-hidden flex-1 overflow-y-auto custom-scrollbar">
+                          <table className="w-full text-left">
+                              <thead className="bg-slate-900 sticky top-0 z-10">
+                                  <tr>
+                                      <th className="p-3 text-slate-400 font-bold text-sm uppercase w-12 text-center">#</th>
+                                      <th className="p-3 text-slate-400 font-bold text-sm uppercase">Jugador</th>
+                                      <th className="p-3 text-slate-400 font-bold text-sm uppercase text-center">Nivell</th>
+                                      <th className="p-3 text-slate-400 font-bold text-sm uppercase text-right">Punts</th>
+                                  </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-800">
+                                  {leaderboard.length === 0 ? (
+                                      <tr><td colSpan={4} className="p-8 text-center text-slate-500 italic">Carregant puntuacions...</td></tr>
+                                  ) : (
+                                      leaderboard.map((entry, idx) => {
+                                          let rankColor = "text-slate-300";
+                                          if (idx === 0) rankColor = "text-yellow-400 drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]";
+                                          if (idx === 1) rankColor = "text-slate-200 drop-shadow-[0_0_5px_rgba(226,232,240,0.5)]";
+                                          if (idx === 2) rankColor = "text-orange-400 drop-shadow-[0_0_5px_rgba(251,146,60,0.5)]";
+
+                                          return (
+                                              <tr key={idx} className={entry.name === playerName && entry.score === gameState.score ? "bg-blue-900/30" : "hover:bg-slate-900/50"}>
+                                                  <td className={`p-3 font-black text-center ${rankColor}`}>{idx + 1}</td>
+                                                  <td className={`p-3 font-bold truncate max-w-[120px] ${rankColor}`}>{entry.name}</td>
+                                                  <td className="p-3 text-center text-slate-400 font-mono">{entry.level}</td>
+                                                  <td className="p-3 text-right font-mono font-bold text-green-400">{entry.score}</td>
+                                              </tr>
+                                          );
+                                      })
+                                  )}
+                              </tbody>
+                          </table>
+                      </div>
+                  </div>
+                )}
+
+                <div className="flex flex-col gap-3 mt-auto shrink-0">
                   <button 
                       onClick={startGame}
-                      className="w-full bg-green-500 hover:bg-green-600 text-white text-xl font-bold py-4 rounded-xl shadow-[0_6px_0_rgb(21,128,61)] active:shadow-none active:translate-y-1 flex items-center justify-center gap-3 transition-all"
+                      className="w-full bg-blue-600 hover:bg-blue-500 text-white text-xl font-bold py-4 rounded-xl shadow-[0_6px_0_rgb(37,99,235)] active:shadow-none active:translate-y-1 flex items-center justify-center gap-3 transition-all"
                   >
-                      <RotateCcw size={28}/> Tornar a intentar
+                      <RotateCcw size={24}/> Tornar a jugar
                   </button>
                   <button 
                       onClick={enterShop}
-                      className="w-full bg-blue-500 hover:bg-blue-600 text-white text-xl font-bold py-4 rounded-xl shadow-[0_6px_0_rgb(29,78,216)] active:shadow-none active:translate-y-1 flex items-center justify-center gap-3 transition-all"
+                      className="w-full bg-slate-700 hover:bg-slate-600 text-white text-lg font-bold py-3 rounded-xl shadow-[0_4px_0_rgb(51,65,85)] active:shadow-none active:translate-y-1 flex items-center justify-center gap-3 transition-all"
                   >
-                      <ShoppingBag size={28}/> Anar a la Botiga
+                      <ShoppingBag size={20}/> Botiga
                   </button>
                 </div>
             </div>

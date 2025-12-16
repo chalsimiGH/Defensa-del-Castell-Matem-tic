@@ -60,3 +60,10 @@ export interface DifficultyConfig {
   numberRange: { min: number; max: number };
   availableButtons: number[];
 }
+
+export interface LeaderboardEntry {
+  name: string;
+  score: number;
+  level: number;
+  date: number;
+}
