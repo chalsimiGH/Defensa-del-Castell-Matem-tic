@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { X, Check, Lock, ShoppingBag, Flag, Flame, Flower, Shield, Bird, Ban, Bomb, Bookmark, Hexagon, Triangle, Eye } from 'lucide-react';
+import { X, Check, Lock, ShoppingBag, Flag, Flame, Flower, Shield, Bird, Ban, Bomb, Bookmark, Hexagon, Triangle, Eye, Heart } from 'lucide-react';
 import { SHOP_ITEMS } from '../constants';
 import { CastleStyle, ShopItem } from '../types';
 
@@ -22,6 +22,7 @@ export const Shop: React.FC<ShopProps> = ({
   onEquip 
 }) => {
   const categories = {
+    consumable: "Objectes Especials",
     wallColor: "Colors de Muralla",
     flagType: "Banderes",
     decoration: "Decoracions"
@@ -37,6 +38,8 @@ export const Shop: React.FC<ShopProps> = ({
   // Helper to render the specific visual for the shop card
   const renderPreview = (item: ShopItem) => {
     switch (item.type) {
+      case 'consumable':
+        return <Heart size={56} className="text-red-500 fill-red-400 animate-pulse" />;
       case 'wallColor':
         return (
           <div className={`w-20 h-20 rounded-lg ${item.value} shadow-inner border-4 border-slate-600/50 flex items-center justify-center`}>
@@ -105,6 +108,7 @@ export const Shop: React.FC<ShopProps> = ({
           {(Object.keys(categories) as Array<keyof typeof categories>).map((catKey) => (
             <div key={catKey} className="bg-slate-800/50 p-4 rounded-3xl border border-slate-700/50">
               <h3 className="text-xl font-black text-blue-400 mb-6 uppercase tracking-wider flex items-center gap-2">
+                {catKey === 'consumable' && '🧪'}
                 {catKey === 'wallColor' && '🧱'} 
                 {catKey === 'flagType' && '🚩'} 
                 {catKey === 'decoration' && '✨'}
@@ -120,6 +124,7 @@ export const Shop: React.FC<ShopProps> = ({
                   const isNone = item.value === 'none' && item.type === 'decoration';
                   // Decorations are toggleable (except 'none'), others are exclusive (so "Equipped" means active)
                   const isToggleType = item.type === 'decoration';
+                  const isConsumable = item.type === 'consumable';
 
                   return (
                     <div 
@@ -140,6 +145,11 @@ export const Shop: React.FC<ShopProps> = ({
                                  <Check size={14} strokeWidth={4} />
                              </div>
                         )}
+                        {isConsumable && (
+                            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-xs font-bold text-green-400 bg-black/60 px-2 py-0.5 rounded-full whitespace-nowrap">
+                                Recupera +15 HP
+                            </div>
+                        )}
                       </div>
                       
                       {/* Item Info */}
@@ -150,7 +160,7 @@ export const Shop: React.FC<ShopProps> = ({
                         
                         <div className="flex justify-between items-center mt-2">
                             {/* Price Label */}
-                            {!unlocked ? (
+                            {(!unlocked || isConsumable) ? (
                                 <span className={`text-sm font-bold ${canAfford ? 'text-yellow-400' : 'text-slate-500'}`}>
                                     {item.cost === 0 ? 'GRATIS' : `${item.cost} 💎`}
                                 </span>
@@ -159,7 +169,15 @@ export const Shop: React.FC<ShopProps> = ({
                             )}
 
                             {/* Action Button */}
-                            {unlocked ? (
+                            {isConsumable ? (
+                                <button 
+                                onClick={() => onBuy(item)}
+                                disabled={!canAfford}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-bold shadow-md flex items-center gap-1 uppercase tracking-wide transition-all ${canAfford ? 'bg-green-600 hover:bg-green-500 text-white active:translate-y-0.5' : 'bg-slate-700 text-slate-500 cursor-not-allowed'}`}
+                                >
+                                {canAfford ? 'Comprar' : <Lock size={12} />}
+                                </button>
+                            ) : unlocked ? (
                                 <button 
                                 onClick={() => onEquip(item)}
                                 className={`px-3 py-1.5 rounded-lg text-xs font-bold shadow-md active:translate-y-0.5 uppercase tracking-wide

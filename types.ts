@@ -29,7 +29,7 @@ export interface CastleStyle {
 export interface ShopItem {
   id: string;
   name: string;
-  type: 'wallColor' | 'flagType' | 'decoration';
+  type: 'wallColor' | 'flagType' | 'decoration' | 'consumable';
   value: string;
   cost: number;
   icon: React.ReactNode;

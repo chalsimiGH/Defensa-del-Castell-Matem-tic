@@ -8,7 +8,7 @@ import { Shop } from './components/Shop';
 import { GameState, Enemy, EquationItem, Operator, ShopItem, EnemyType } from './types';
 import { INITIAL_HEALTH, getDifficultyConfig, ENEMY_TYPES } from './constants';
 import { evaluateEquation, generateTargetNumber } from './utils/mathEngine';
-import { Trophy, RotateCcw, ShoppingBag, ArrowRight, Star, Volume2, VolumeX, Music, Skull } from 'lucide-react';
+import { Trophy, RotateCcw, ShoppingBag, ArrowRight, Star, Volume2, VolumeX, Music, Skull, Heart } from 'lucide-react';
 
 // --- VISUAL COMPONENTS ---
 
@@ -116,6 +116,10 @@ export default function App() {
   const [cheatClicks, setCheatClicks] = useState(0);
   const cheatTimerRef = useRef<number | null>(null);
 
+  // --- LEVEL CHEAT CODE ---
+  const [levelCheatClicks, setLevelCheatClicks] = useState(0);
+  const levelCheatTimerRef = useRef<number | null>(null);
+
   const handleScoreClick = () => {
     // Clear existing timer
     if (cheatTimerRef.current) {
@@ -139,6 +143,28 @@ export default function App() {
     }
   };
 
+  const handleLevelClick = () => {
+      // Clear existing timer
+      if (levelCheatTimerRef.current) {
+          window.clearTimeout(levelCheatTimerRef.current);
+      }
+      
+      const newCount = levelCheatClicks + 1;
+      setLevelCheatClicks(newCount);
+
+      if (newCount >= 5) {
+          // TRIGGER LEVEL SKIP
+          setFeedbackEffect({ x: 50, text: 'NIVELL SALTAT! ⏩', type: 'hit' });
+          setTimeout(() => setFeedbackEffect(null), 1000);
+          nextLevel();
+          setLevelCheatClicks(0);
+      } else {
+          levelCheatTimerRef.current = window.setTimeout(() => {
+              setLevelCheatClicks(0);
+          }, 800);
+      }
+  };
+
   // Constants for level progression
   const getEnemiesPerLevel = (level: number) => {
       // Boss levels (5, 10, 15...) only have 1 enemy (The Boss)
@@ -150,6 +176,7 @@ export default function App() {
   const lastUpdateRef = useRef<number>(0);
   const animationFrameRef = useRef<number>(0);
   const nextSpawnTimeRef = useRef<number>(0);
+  const lastBossAttackRef = useRef<number>(0); // Timer for Boss Attacks
 
   // --- AUDIO LOGIC (Web Audio API) ---
   const musicIntervalRef = useRef<number | null>(null);
@@ -314,29 +341,47 @@ export default function App() {
 
   // Logic to handle buying an item
   const handleBuyItem = (item: ShopItem) => {
-    if (gameState.currency >= item.cost && !gameState.unlockedItems.includes(item.id)) {
-      setGameState(prev => {
-        // Logic for auto-equipping after purchase
-        let newStyle = { ...prev.castleStyle };
-        
-        if (item.type === 'decoration') {
-            // For decorations, we add to the array (stackable)
-            if (!newStyle.decorations.includes(item.value) && item.value !== 'none') {
-                newStyle.decorations = [...newStyle.decorations, item.value];
+    if (gameState.currency >= item.cost) {
+      if (item.type === 'consumable') {
+          // Handle Consumables (Instant effect, do not unlock)
+          if (item.id === 'potion_health') {
+              // Only buy if health is not full
+              if (gameState.health < gameState.maxHealth) {
+                  setGameState(prev => ({
+                      ...prev,
+                      currency: prev.currency - item.cost,
+                      health: Math.min(prev.maxHealth, prev.health + 15)
+                  }));
+              }
+          }
+          return;
+      }
+      
+      // Handle Normal Items (Unlockable)
+      if (!gameState.unlockedItems.includes(item.id)) {
+        setGameState(prev => {
+            // Logic for auto-equipping after purchase
+            let newStyle = { ...prev.castleStyle };
+            
+            if (item.type === 'decoration') {
+                // For decorations, we add to the array (stackable)
+                if (!newStyle.decorations.includes(item.value) && item.value !== 'none') {
+                    newStyle.decorations = [...newStyle.decorations, item.value];
+                }
+            } else {
+                // For walls and flags, we replace (exclusive)
+                // @ts-ignore - dynamic key access
+                newStyle[item.type] = item.value;
             }
-        } else {
-            // For walls and flags, we replace (exclusive)
-            // @ts-ignore - dynamic key access
-            newStyle[item.type] = item.value;
-        }
 
-        return {
-          ...prev,
-          currency: prev.currency - item.cost,
-          unlockedItems: [...prev.unlockedItems, item.id],
-          castleStyle: newStyle
-        };
-      });
+            return {
+            ...prev,
+            currency: prev.currency - item.cost,
+            unlockedItems: [...prev.unlockedItems, item.id],
+            castleStyle: newStyle
+            };
+        });
+      }
     }
   };
 
@@ -532,6 +577,8 @@ export default function App() {
            setEnemies(prev => [...prev, newEnemy]);
            // Set spawn time way forward so no one else spawns
            nextSpawnTimeRef.current = timestamp + 999999;
+           // Reset boss attack timer
+           lastBossAttackRef.current = timestamp;
        } else {
            // Normal Spawn
             const newVal = generateTargetNumber(difficulty.numberRange.min, difficulty.numberRange.max);
@@ -552,16 +599,30 @@ export default function App() {
        }
     }
 
-    // 2. Ink Ability Logic (Boss Only)
-    if (isBossLevel && !inkEffect) {
-        const boss = enemies.find(e => e.type === 'boss' && e.status === 'walking');
+    // 2. Boss Mechanics (Ink & Attack)
+    if (isBossLevel) {
+        const boss = enemies.find(e => e.type === 'boss' && e.status !== 'dying');
+        
         if (boss) {
-            // Random chance to shoot ink (0.2% per frame approx)
-            if (Math.random() < 0.002) {
+            // INK: Random chance (0.2% per frame approx)
+            if (!inkEffect && Math.random() < 0.002) {
                 playInkSound();
                 setInkEffect(true);
-                // Clear ink after 4 seconds
                 setTimeout(() => setInkEffect(false), 4000);
+            }
+
+            // ATTACK: Every 5 seconds
+            if (timestamp - lastBossAttackRef.current > 5000) {
+                // Trigger boss attack damage
+                setGameState(prev => ({ ...prev, health: Math.max(0, prev.health - 15) }));
+                setCastleShaking(true);
+                setTimeout(() => setCastleShaking(false), 800); // Shaking lasts longer for boss attack
+                
+                // Visual feedback for boss attack (we can use the feedback effect)
+                setFeedbackEffect({ x: 80, text: '🔥 ATAC!', type: 'miss' });
+                setTimeout(() => setFeedbackEffect(null), 1000);
+
+                lastBossAttackRef.current = timestamp;
             }
         }
     }
@@ -687,8 +748,11 @@ export default function App() {
                 <span className="font-bold text-slate-800 text-lg">{gameState.score}</span>
             </div>
             
-            {/* Level */}
-            <div className={`flex items-center gap-2 ${gameState.level % 5 === 0 ? 'bg-purple-800 border-purple-500 animate-pulse' : 'bg-indigo-600/90 border-indigo-400'} text-white rounded-full px-4 py-2 shadow-lg border-2`}>
+            {/* Level (Now with Level Skip Cheat) */}
+            <div 
+                onClick={handleLevelClick}
+                className={`flex items-center gap-2 ${gameState.level % 5 === 0 ? 'bg-purple-800 border-purple-500 animate-pulse' : 'bg-indigo-600/90 border-indigo-400'} text-white rounded-full px-4 py-2 shadow-lg border-2 cursor-pointer active:scale-95 select-none`}
+            >
                 <span className="font-bold uppercase text-sm">{gameState.level % 5 === 0 ? '☠️ BOSS' : 'Nivell'}</span>
                 <span className="font-bold text-xl">{gameState.level}</span>
             </div>

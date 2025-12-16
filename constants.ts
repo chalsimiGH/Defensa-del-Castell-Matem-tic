@@ -52,6 +52,9 @@ export const getDifficultyConfig = (level: number): DifficultyConfig => {
 };
 
 export const SHOP_ITEMS: ShopItem[] = [
+  // Consumables
+  { id: 'potion_health', name: 'Poció de Vida', type: 'consumable', value: 'health', cost: 20, icon: null },
+
   // Colors
   { id: 'color_slate', name: 'Pedra Clàssica', type: 'wallColor', value: 'bg-slate-400', cost: 0, icon: null },
   { id: 'color_sand', name: 'Sorra del Desert', type: 'wallColor', value: 'bg-amber-200', cost: 10, icon: null },
