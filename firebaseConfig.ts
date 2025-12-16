@@ -1,21 +1,34 @@
 
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, Firestore } from "firebase/firestore";
+import { getAnalytics } from "firebase/analytics";
 
-// TODO: Afegeix aquí les teves claus de Firebase de la consola (Project Settings > General > Your apps)
-// Substitueix els valors que comencen per "SUBSTITUEIX..."
+// La teva configuració de Firebase real
 const firebaseConfig = {
-  apiKey: "SUBSTITUEIX_AIXO_PER_LA_TEVA_API_KEY",
-  authDomain: "SUBSTITUEIX_AIXO.firebaseapp.com",
-  projectId: "SUBSTITUEIX_AIXO",
-  storageBucket: "SUBSTITUEIX_AIXO.appspot.com",
-  messagingSenderId: "SUBSTITUEIX_AIXO",
-  appId: "SUBSTITUEIX_AIXO"
+  apiKey: "AIzaSyBsX2K-ZqTeFiXbL3xxYYG_l4piimdPQvA",
+  authDomain: "castellmatematic.firebaseapp.com",
+  projectId: "castellmatematic",
+  storageBucket: "castellmatematic.firebasestorage.app",
+  messagingSenderId: "189820081218",
+  appId: "1:189820081218:web:54fab5c1d1c0435e5a09db",
+  measurementId: "G-7NQBZDK7PL"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+// Initialize Firebase safely
+let dbExport: Firestore | null = null;
 
-// Initialize Cloud Firestore and get a reference to the service
-export const db = getFirestore(app);
+try {
+  const app = initializeApp(firebaseConfig);
+  // Inicialitzem la base de dades
+  dbExport = getFirestore(app);
+  // Inicialitzem Google Analytics (opcional, però venia al teu codi)
+  const analytics = getAnalytics(app);
+  
+  console.log("✅ Firebase inicialitzat correctament connectat a: castellmatematic");
+} catch (error) {
+  console.error("Error inicialitzant Firebase:", error);
+}
+
+// Export db which might be null if config is missing
+export const db = dbExport;

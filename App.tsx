@@ -123,6 +123,16 @@ export default function App() {
 
   // Fetch Leaderboard from Firebase (with Fallback)
   const fetchLeaderboard = useCallback(async () => {
+    // Force offline if db is null (wrong config)
+    if (!db) {
+        setIsOnline(false);
+        const saved = localStorage.getItem('math_castle_leaderboard');
+        if (saved) {
+            try { setLeaderboard(JSON.parse(saved)); } catch(e) {}
+        }
+        return;
+    }
+
     try {
         const leaderboardRef = collection(db, "leaderboard");
         // Query top 10 scores
@@ -165,6 +175,8 @@ export default function App() {
       };
 
       try {
+          if (!db) throw new Error("No database configured");
+
           // Attempt Save to Firebase
           await addDoc(collection(db, "leaderboard"), newEntry);
           // Refresh
