@@ -94,6 +94,47 @@ export const CrystalVisual = () => {
     );
 };
 
+export const GatorVisual = ({ flipped = false }: { flipped?: boolean }) => {
+    return (
+        <div className={`relative w-20 h-10 ${flipped ? 'scale-x-[-1]' : ''}`}>
+             {/* Submerged Shadow */}
+             <div className="absolute bottom-0 w-full h-3 bg-green-900/50 rounded-full blur-[1px]"></div>
+             
+             {/* Main Head Body */}
+             <div className="absolute bottom-1 w-16 h-5 bg-green-600 rounded-t-lg rounded-b-md border-2 border-green-800 z-10"></div>
+             
+             {/* Snout Upper */}
+             <div className="absolute bottom-3 left-0 w-10 h-3 bg-green-500 rounded-t-md border-t-2 border-l-2 border-green-700 z-20">
+                 {/* Nostrils */}
+                 <div className="absolute top-1 left-1 w-1 h-1 bg-black/60 rounded-full"></div>
+                 <div className="absolute top-1 left-3 w-1 h-1 bg-black/60 rounded-full"></div>
+             </div>
+
+             {/* Eyes (Popping up) */}
+             <div className="absolute bottom-4 left-8 w-3 h-3 bg-yellow-400 rounded-full border-2 border-green-800 z-0">
+                 <div className="absolute top-1 right-0.5 w-1 h-1.5 bg-black rounded-full"></div>
+             </div>
+             <div className="absolute bottom-4 left-11 w-3 h-3 bg-yellow-400 rounded-full border-2 border-green-800 z-0">
+                 <div className="absolute top-1 right-0.5 w-1 h-1.5 bg-black rounded-full"></div>
+             </div>
+
+             {/* Spikes on back */}
+             <div className="absolute bottom-5 right-2 flex gap-0.5 z-0">
+                 <div className="w-0 h-0 border-l-[3px] border-l-transparent border-r-[3px] border-r-transparent border-b-[6px] border-b-green-800"></div>
+                 <div className="w-0 h-0 border-l-[3px] border-l-transparent border-r-[3px] border-r-transparent border-b-[6px] border-b-green-800"></div>
+                 <div className="w-0 h-0 border-l-[3px] border-l-transparent border-r-[3px] border-r-transparent border-b-[6px] border-b-green-800"></div>
+             </div>
+
+             {/* Teeth */}
+             <div className="absolute bottom-0 left-1 flex gap-1 z-30">
+                 <div className="w-1 h-2 bg-white rounded-b-sm border border-gray-300"></div>
+                 <div className="w-1 h-2 bg-white rounded-b-sm border border-gray-300"></div>
+                 <div className="w-1 h-2 bg-white rounded-b-sm border border-gray-300"></div>
+             </div>
+        </div>
+    );
+};
+
 // New Statue Component
 const StoneStatue = ({ flipped = false }: { flipped?: boolean }) => (
     <div className={`flex flex-col items-center drop-shadow-2xl ${flipped ? '-scale-x-100' : ''}`}>
@@ -197,18 +238,14 @@ export const Castle: React.FC<CastleProps> = ({ health, maxHealth, isShaking, st
                 <Waves size={24} className="md:w-8 md:h-8" /> <Waves size={24} className="md:w-8 md:h-8" /> <Waves size={24} className="md:w-8 md:h-8" />
              </div>
              
-             {/* Gator Decoration - FIXED VISIBILITY (Added z-index and explicit opacity) */}
+             {/* Gator Decoration - NEW IMPROVED VISUALS */}
              {style.decorations.includes('gators') && (
                 <>
-                  <div className="absolute left-[20%] top-2 z-10 animate-bounce" style={{ animationDuration: '4s' }}>
-                      <div className="w-10 h-3 bg-green-700 rounded-full shadow-sm border border-green-900"></div>
-                      <div className="absolute -top-1 left-2 w-2 h-2 bg-yellow-400 rounded-full border border-black animate-[pulse_3s_infinite]"></div>
-                      <div className="absolute -top-1 left-6 w-2 h-2 bg-yellow-400 rounded-full border border-black animate-[pulse_3s_infinite]"></div>
+                  <div className="absolute left-[15%] top-1 md:top-2 z-20 animate-bounce" style={{ animationDuration: '4s' }}>
+                      <GatorVisual />
                   </div>
-                  <div className="absolute right-[20%] top-4 z-10 animate-bounce" style={{ animationDuration: '3s' }}>
-                      <div className="w-10 h-3 bg-green-700 rounded-full shadow-sm border border-green-900"></div>
-                      <div className="absolute -top-1 left-2 w-2 h-2 bg-yellow-400 rounded-full border border-black animate-[pulse_2.5s_infinite]"></div>
-                      <div className="absolute -top-1 left-6 w-2 h-2 bg-yellow-400 rounded-full border border-black animate-[pulse_2.5s_infinite]"></div>
+                  <div className="absolute right-[15%] top-3 md:top-4 z-20 animate-bounce" style={{ animationDuration: '3s' }}>
+                      <GatorVisual flipped />
                   </div>
                 </>
              )}

@@ -3,7 +3,7 @@ import React from 'react';
 import { X, Check, Lock, ShoppingBag, Flag, Flame, Flower, Shield, Ban, Bomb, Bookmark, Triangle, Eye, Heart } from 'lucide-react';
 import { SHOP_ITEMS } from '../constants';
 import { CastleStyle, ShopItem } from '../types';
-import { DragonVisual, CrystalVisual } from './Castle';
+import { DragonVisual, CrystalVisual, GatorVisual } from './Castle';
 
 interface ShopProps {
   currency: number;
@@ -74,7 +74,14 @@ export const Shop: React.FC<ShopProps> = ({
           // New Items Preview
           case 'banners': return <div className="flex gap-2"><Bookmark size={40} className="text-red-600 fill-red-600" /><Bookmark size={40} className="text-red-600 fill-red-600" /></div>;
           case 'spikes': return <div className="flex gap-[-4px]"><Triangle size={32} className="text-slate-400 fill-slate-600" /><Triangle size={32} className="text-slate-400 fill-slate-600" /><Triangle size={32} className="text-slate-400 fill-slate-600" /></div>;
-          case 'gators': return <div className="bg-blue-400/30 p-2 rounded-full"><Eye size={32} className="text-green-600 fill-green-400" /></div>;
+          
+          // Updated Gator Preview
+          case 'gators': return (
+              <div className="relative w-full h-full flex items-center justify-center">
+                  <div className="absolute bottom-0 w-24 h-8 bg-blue-500/30 rounded-full blur-md"></div>
+                  <div className="scale-125 mb-2"><GatorVisual /></div>
+              </div>
+          );
           
           default: return <span className="text-4xl">✨</span>;
         }
