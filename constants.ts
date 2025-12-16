@@ -42,8 +42,13 @@ export const getDifficultyConfig = (level: number): DifficultyConfig => {
       availableButtons: [1, 2, 3, 4, 5, 10],
     };
   }
+  
+  // Dynamic difficulty for level 5+
+  // Spawn rate starts at 4000ms and decreases by 120ms per level, capped at 1000ms minimum.
+  const dynamicSpawnRate = Math.max(1000, 4000 - ((level - 4) * 120));
+
   return {
-    spawnRate: 4000,
+    spawnRate: dynamicSpawnRate,
     enemySpeedBase: 1.3 + (level * 0.05),
     allowedOperators: ['+', '-', '×', '÷'],
     numberRange: { min: 8, max: 30 + (level * 2) },
