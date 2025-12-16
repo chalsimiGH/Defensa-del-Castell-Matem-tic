@@ -174,8 +174,9 @@ export const EnemyRenderer: React.FC<EnemyRendererProps> = ({ enemies }) => {
             key={enemy.id}
             // IMPORTANT: If Boss, apply the floating animation HERE so the number moves with the body
             className={`
-                absolute flex flex-col items-center transition-transform duration-100 ease-linear
-                ${isBoss ? 'animate-[bounce_3s_infinite]' : ''}
+                absolute flex flex-col items-center
+                /* Change transition for Boss to be instant to allow rapid jitter */
+                ${isBoss ? 'transition-none duration-0 animate-[bounce_3s_infinite]' : 'transition-transform duration-100 ease-linear'}
             `}
             style={{ 
               left: `${pos.left}%`,

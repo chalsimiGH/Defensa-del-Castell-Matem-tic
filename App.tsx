@@ -543,7 +543,10 @@ export default function App() {
     if (evaluatedResult === null) return;
 
     // Filter out already dying or attacking enemies from being targeted
-    const activeEnemies = [...enemies].filter(e => e.status === 'walking');
+    // For Boss, target the one that is NOT dying
+    const activeEnemies = [...enemies].filter(e => e.status !== 'dying');
+    
+    // Sort logic: Normal enemies by X (closest first). Boss is usually alone.
     const sortedEnemies = activeEnemies.sort((a, b) => a.x - b.x);
     const targetIndex = sortedEnemies.findIndex(e => e.value === evaluatedResult);
 
@@ -651,7 +654,8 @@ export default function App() {
     
     // 1. Spawning Logic
     const lastEnemy = enemies.length > 0 ? enemies[enemies.length - 1] : null;
-    const canSpawn = timestamp > nextSpawnTimeRef.current && (!lastEnemy || lastEnemy.x < 60);
+    // For normal levels: spawn if last enemy walked enough. For Boss: only spawn if empty.
+    const canSpawn = timestamp > nextSpawnTimeRef.current && (!lastEnemy || (!isBossLevel && lastEnemy.x < 60));
 
     const enemiesTarget = getEnemiesPerLevel(gameState.level);
     const activeAndDefeatedCount = gameState.enemiesDefeated + enemies.filter(e => e.status !== 'dying').length;
@@ -665,7 +669,7 @@ export default function App() {
                 id: timestamp.toString(),
                 value: generateTargetNumber(difficulty.numberRange.min, difficulty.numberRange.max),
                 type: 'boss',
-                x: 100, 
+                x: 30, // BOSS SPAWN: Directly in front (approx 30%)
                 speed: ENEMY_TYPES['boss'].speed * difficulty.enemySpeedBase,
                 maxHealth: 1,
                 status: 'walking',
@@ -741,7 +745,7 @@ export default function App() {
             return;
         }
 
-        // Handle Attacking Animation
+        // Handle Attacking Animation (Normal enemies only)
         if (enemy.status === 'attacking') {
              // Keep for 300ms to show attack impact
              if (now - (enemy.animationStartTime || 0) < 300) {
@@ -750,13 +754,27 @@ export default function App() {
              return;
         }
 
-        // Handle Walking
+        // --- BOSS MOVEMENT LOGIC ---
+        if (enemy.type === 'boss') {
+            // Boss stays in front of castle but jitters rapidly to confuse player
+            // Using two sine waves: one for slow swaying, one for rapid vibration
+            const timeFactor = now / 1000;
+            // Base Position: 30
+            // Sway: +/- 8 units, period 3s
+            // Jitter: +/- 1.5 units, period 0.3s (Rapid!)
+            const newX = 30 + (Math.sin(timeFactor * 2) * 8) + (Math.sin(timeFactor * 20) * 1.5);
+            
+            nextEnemies.push({ ...enemy, x: newX });
+            return; // Skip normal movement logic
+        }
+
+        // --- NORMAL ENEMY MOVEMENT ---
         const moveAmount = (enemy.speed * deltaTime) / 16;
         const newX = enemy.x - moveAmount;
 
         if (newX <= 0) {
           // Trigger Attack
-          damageTaken += (enemy.type === 'boss' ? 100 : 20); // Boss kills instantly if it reaches castle
+          damageTaken += 20;
           nextEnemies.push({
               ...enemy,
               x: 0,
