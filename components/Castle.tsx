@@ -96,12 +96,12 @@ export const CrystalVisual = () => {
 
 export const GatorVisual = ({ flipped = false }: { flipped?: boolean }) => {
     return (
-        <div className={`relative w-20 h-10 ${flipped ? 'scale-x-[-1]' : ''}`}>
+        <div className={`relative w-20 h-10 ${flipped ? 'scale-x-[-1]' : ''} drop-shadow-md`}>
              {/* Submerged Shadow */}
-             <div className="absolute bottom-0 w-full h-3 bg-green-900/50 rounded-full blur-[1px]"></div>
+             <div className="absolute bottom-0 w-full h-3 bg-green-900/40 rounded-full blur-[2px]"></div>
              
              {/* Main Head Body */}
-             <div className="absolute bottom-1 w-16 h-5 bg-green-600 rounded-t-lg rounded-b-md border-2 border-green-800 z-10"></div>
+             <div className="absolute bottom-1 w-16 h-5 bg-green-600 rounded-t-lg rounded-b-md border-2 border-green-800 z-10 shadow-[inset_0_2px_4px_rgba(255,255,255,0.2)]"></div>
              
              {/* Snout Upper */}
              <div className="absolute bottom-3 left-0 w-10 h-3 bg-green-500 rounded-t-md border-t-2 border-l-2 border-green-700 z-20">
@@ -120,16 +120,16 @@ export const GatorVisual = ({ flipped = false }: { flipped?: boolean }) => {
 
              {/* Spikes on back */}
              <div className="absolute bottom-5 right-2 flex gap-0.5 z-0">
+                 <div className="w-0 h-0 border-l-[3px] border-l-transparent border-r-[3px] border-r-transparent border-b-[6px] border-b-green-700"></div>
                  <div className="w-0 h-0 border-l-[3px] border-l-transparent border-r-[3px] border-r-transparent border-b-[6px] border-b-green-800"></div>
-                 <div className="w-0 h-0 border-l-[3px] border-l-transparent border-r-[3px] border-r-transparent border-b-[6px] border-b-green-800"></div>
-                 <div className="w-0 h-0 border-l-[3px] border-l-transparent border-r-[3px] border-r-transparent border-b-[6px] border-b-green-800"></div>
+                 <div className="w-0 h-0 border-l-[3px] border-l-transparent border-r-[3px] border-r-transparent border-b-[6px] border-b-green-900"></div>
              </div>
 
              {/* Teeth */}
              <div className="absolute bottom-0 left-1 flex gap-1 z-30">
-                 <div className="w-1 h-2 bg-white rounded-b-sm border border-gray-300"></div>
-                 <div className="w-1 h-2 bg-white rounded-b-sm border border-gray-300"></div>
-                 <div className="w-1 h-2 bg-white rounded-b-sm border border-gray-300"></div>
+                 <div className="w-1 h-2 bg-white rounded-b-sm border border-gray-300 shadow-sm"></div>
+                 <div className="w-1 h-2 bg-white rounded-b-sm border border-gray-300 shadow-sm"></div>
+                 <div className="w-1 h-2 bg-white rounded-b-sm border border-gray-300 shadow-sm"></div>
              </div>
         </div>
     );
@@ -232,24 +232,13 @@ export const Castle: React.FC<CastleProps> = ({ health, maxHealth, isShaking, st
       {/* CASTLE COMPLEX */}
       <div className="relative w-64 h-48 sm:w-80 sm:h-64 md:w-96 md:h-72 flex items-end justify-center perspective-500">
         
-        {/* Moat */}
+        {/* Moat (Water Background Only) */}
         <div className="absolute -bottom-4 w-[120%] h-12 md:h-16 bg-blue-500/50 rounded-full blur-sm flex items-center justify-center overflow-hidden border-t-4 border-blue-400/30">
              <div className="animate-wiggle opacity-50 text-blue-200 w-full flex justify-around">
                 <Waves size={24} className="md:w-8 md:h-8" /> <Waves size={24} className="md:w-8 md:h-8" /> <Waves size={24} className="md:w-8 md:h-8" />
              </div>
-             
-             {/* Gator Decoration - NEW IMPROVED VISUALS */}
-             {style.decorations.includes('gators') && (
-                <>
-                  <div className="absolute left-[15%] top-1 md:top-2 z-20 animate-bounce" style={{ animationDuration: '4s' }}>
-                      <GatorVisual />
-                  </div>
-                  <div className="absolute right-[15%] top-3 md:top-4 z-20 animate-bounce" style={{ animationDuration: '3s' }}>
-                      <GatorVisual flipped />
-                  </div>
-                </>
-             )}
         </div>
+        {/* Note: Gators are now rendered at the end of the component stack to avoid blur and overlap issues */}
 
         {/* Drawbridge */}
         <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-16 md:w-24 h-16 md:h-20 bg-amber-900 border-x-4 border-amber-950 origin-bottom transform perspective-origin-bottom rotate-x-12 z-10 flex flex-col items-center justify-around py-2 shadow-lg">
@@ -421,6 +410,19 @@ export const Castle: React.FC<CastleProps> = ({ health, maxHealth, isShaking, st
                 </div>
                 <div className="absolute bottom-0 -right-4 md:-right-6 z-40 scale-125 origin-bottom">
                    <StoneStatue flipped />
+                </div>
+            </>
+        )}
+        
+        {/* Gators Decoration - RELOCATED OUTSIDE BLUR & OVERFLOW */}
+        {style.decorations.includes('gators') && (
+            <>
+                {/* Placed at z-50 to be above everything, and positioned wider to avoid statues */}
+                <div className="absolute -bottom-2 left-[-15%] md:left-[-10%] z-50 animate-bounce" style={{ animationDuration: '4s' }}>
+                    <GatorVisual />
+                </div>
+                <div className="absolute -bottom-2 right-[-15%] md:right-[-10%] z-50 animate-bounce" style={{ animationDuration: '3s' }}>
+                    <GatorVisual flipped />
                 </div>
             </>
         )}
