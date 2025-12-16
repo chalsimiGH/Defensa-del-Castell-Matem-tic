@@ -11,75 +11,87 @@ interface CastleProps {
   isAttacking?: boolean; // New prop for animation
 }
 
-// Improved CSS-based Dragon Component (No more bird look)
-const PixelDragon = () => {
-  return (
-    <div className="absolute -top-32 left-1/2 -translate-x-1/2 z-50 animate-wiggle scale-[1.8] origin-bottom" style={{ animationDuration: '4s' }}>
-        
-        {/* Dragon Shadow */}
-        <div className="absolute bottom-0 left-2 w-16 h-4 bg-black/20 rounded-full blur-sm"></div>
+// --- EXPORTED VISUAL COMPONENTS FOR SHOP & CASTLE ---
 
-        <div className="relative w-24 h-24">
+export const DragonVisual = () => {
+    return (
+        <div className="relative w-32 h-32 animate-[float_4s_ease-in-out_infinite]">
+            {/* Shadow */}
+            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-20 h-4 bg-black/20 rounded-full blur-sm"></div>
             
-            {/* Left Wing (Bat/Membrane Style) */}
-            <div className="absolute top-6 -left-8 w-12 h-10 origin-bottom-right animate-[pulse_1.5s_ease-in-out_infinite]">
-                 {/* Wing Bone */}
-                 <div className="absolute top-0 right-0 w-full h-1 bg-red-900 rounded-full -rotate-12"></div>
-                 {/* Wing Membrane */}
-                 <div className="absolute top-1 right-0 w-full h-full bg-red-600/90 rounded-bl-full border-l-2 border-red-900 clip-path-polygon" style={{ clipPath: 'polygon(100% 0, 0 100%, 100% 100%)' }}></div>
-                 <div className="absolute top-2 right-2 w-2/3 h-2/3 bg-red-500/50 rounded-bl-full"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+                 {/* Left Wing (Back) */}
+                 <div className="absolute top-6 left-2 w-16 h-12 bg-red-800 rounded-tl-[40px] rounded-br-[40px] origin-bottom-right animate-[wiggle_1s_ease-in-out_infinite] border-2 border-red-950"></div>
+                 
+                 {/* Body */}
+                 <div className="absolute bottom-6 w-14 h-20 bg-gradient-to-b from-red-600 to-red-800 rounded-b-3xl rounded-t-2xl border-2 border-red-950 shadow-md z-10">
+                     {/* Belly Scales */}
+                     <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-8 h-12 bg-yellow-400/80 rounded-b-xl flex flex-col gap-1 p-1">
+                         <div className="w-full h-0.5 bg-yellow-600/50"></div>
+                         <div className="w-full h-0.5 bg-yellow-600/50"></div>
+                         <div className="w-full h-0.5 bg-yellow-600/50"></div>
+                         <div className="w-full h-0.5 bg-yellow-600/50"></div>
+                     </div>
+                 </div>
+
+                 {/* Head Group */}
+                 <div className="absolute top-2 left-1/2 -translate-x-1/2 z-20">
+                     {/* Head Shape */}
+                     <div className="w-16 h-14 bg-red-600 rounded-xl border-2 border-red-900 relative shadow-sm">
+                         {/* Snout */}
+                         <div className="absolute bottom-0 w-full h-6 bg-red-500 rounded-b-lg border-t border-red-800">
+                             <div className="absolute top-2 left-3 w-1.5 h-1.5 bg-black rounded-full opacity-60"></div>
+                             <div className="absolute top-2 right-3 w-1.5 h-1.5 bg-black rounded-full opacity-60"></div>
+                         </div>
+                         {/* Eyes */}
+                         <div className="absolute top-3 left-2 w-4 h-5 bg-yellow-300 rounded-full border border-black overflow-hidden">
+                             <div className="w-1.5 h-3 bg-black absolute top-1 right-1 rounded-full"></div>
+                         </div>
+                         <div className="absolute top-3 right-2 w-4 h-5 bg-yellow-300 rounded-full border border-black overflow-hidden">
+                             <div className="w-1.5 h-3 bg-black absolute top-1 right-1 rounded-full"></div>
+                         </div>
+                         {/* Horns */}
+                         <div className="absolute -top-4 left-0 w-4 h-6 bg-white border border-slate-300 rounded-t-full -rotate-12 z-0"></div>
+                         <div className="absolute -top-4 right-0 w-4 h-6 bg-white border border-slate-300 rounded-t-full rotate-12 z-0"></div>
+                     </div>
+                 </div>
+
+                 {/* Right Wing (Front) */}
+                 <div className="absolute top-8 right-0 w-16 h-12 bg-red-600 rounded-tr-[40px] rounded-bl-[40px] origin-bottom-left animate-[wiggle_1s_ease-in-out_infinite_reverse] border-2 border-red-900 z-30 opacity-90"></div>
+
+                 {/* Fire Breath */}
+                 <div className="absolute top-10 -right-8 animate-pulse z-40">
+                      <Flame size={24} className="text-orange-500 fill-yellow-400 rotate-90 drop-shadow-[0_0_10px_orange]" />
+                 </div>
             </div>
-
-            {/* Right Wing */}
-            <div className="absolute top-6 -right-8 w-12 h-10 origin-bottom-left animate-[pulse_1.5s_ease-in-out_infinite]" style={{ transform: 'scaleX(-1)' }}>
-                 <div className="absolute top-0 right-0 w-full h-1 bg-red-900 rounded-full -rotate-12"></div>
-                 <div className="absolute top-1 right-0 w-full h-full bg-red-600/90 rounded-bl-full border-l-2 border-red-900" style={{ clipPath: 'polygon(100% 0, 0 100%, 100% 100%)' }}></div>
-                 <div className="absolute top-2 right-2 w-2/3 h-2/3 bg-red-500/50 rounded-bl-full"></div>
-            </div>
-
-            {/* Tail */}
-            <div className="absolute bottom-4 -left-4 w-12 h-3 bg-green-700 rounded-full origin-right rotate-12"></div>
-            <div className="absolute bottom-4 -left-6 w-4 h-4 bg-red-600 rotate-45 border border-red-800"></div> {/* Tail Spike */}
-
-            {/* Body */}
-            <div className="absolute bottom-4 left-6 w-12 h-14 bg-green-700 rounded-b-xl border-x-2 border-green-900"></div>
-            {/* Belly Scales */}
-            <div className="absolute bottom-5 left-8 w-8 h-10 bg-yellow-400 opacity-90 rounded-b-lg flex flex-col gap-1 p-0.5">
-                <div className="w-full h-1 bg-yellow-600 opacity-30"></div>
-                <div className="w-full h-1 bg-yellow-600 opacity-30"></div>
-                <div className="w-full h-1 bg-yellow-600 opacity-30"></div>
-                <div className="w-full h-1 bg-yellow-600 opacity-30"></div>
-            </div>
-
-            {/* Head Neck */}
-            <div className="absolute top-6 left-8 w-8 h-8 bg-green-700"></div>
-
-            {/* Head */}
-            <div className="absolute top-0 left-5 w-14 h-12 bg-green-600 rounded-lg border-2 border-green-800 shadow-sm">
-                
-                {/* Snout */}
-                <div className="absolute top-4 -right-2 w-6 h-6 bg-green-500 rounded-r-md border-y-2 border-r-2 border-green-800">
-                     <div className="absolute top-1 right-2 w-1.5 h-1.5 bg-black rounded-full"></div> {/* Nostril */}
-                </div>
-
-                {/* Eye */}
-                <div className="absolute top-2 left-4 w-4 h-4 bg-yellow-300 border border-black rounded-full overflow-hidden">
-                    <div className="w-1.5 h-4 bg-black absolute top-0 left-1.5"></div> {/* Vertical Pupil */}
-                </div>
-
-                {/* Horns */}
-                <div className="absolute -top-4 left-2 w-3 h-6 bg-white border border-slate-300 rounded-t-full -rotate-12"></div>
-                <div className="absolute -top-4 left-8 w-3 h-6 bg-white border border-slate-300 rounded-t-full rotate-12"></div>
-            </div>
-             
-             {/* Fire Breath Animation */}
-             <div className="absolute top-8 -right-8 animate-pulse" style={{ animationDuration: '0.5s' }}>
-                 <Flame size={24} className="text-orange-500 fill-yellow-400 rotate-90 drop-shadow-lg" />
-                 <div className="absolute top-0 left-4 w-2 h-2 bg-red-500 rounded-full animate-ping"></div>
-             </div>
         </div>
-    </div>
-  );
+    );
+};
+
+export const CrystalVisual = () => {
+    return (
+        <div className="relative w-24 h-32 flex items-center justify-center">
+             {/* Glow Behind */}
+             <div className="absolute inset-0 bg-cyan-400/30 blur-xl rounded-full animate-pulse"></div>
+             
+             {/* Main Crystal */}
+             <div className="relative z-10 w-12 h-20 bg-gradient-to-br from-cyan-200 via-cyan-400 to-blue-600 clip-path-polygon animate-[bounce_3s_infinite]" style={{ clipPath: 'polygon(50% 0%, 100% 30%, 80% 100%, 20% 100%, 0% 30%)' }}>
+                <div className="absolute inset-0 bg-white/30 clip-path-polygon" style={{ clipPath: 'polygon(50% 0%, 100% 30%, 50% 30%)' }}></div>
+                <div className="absolute top-0 left-0 w-full h-full border-2 border-white/50 opacity-50"></div>
+             </div>
+             
+             {/* Orbiting Shards */}
+             <div className="absolute w-full h-full animate-[spin_8s_linear_infinite]">
+                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-4 h-6 bg-cyan-300 clip-path-polygon shadow-[0_0_10px_white]" style={{ clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)' }}></div>
+             </div>
+             <div className="absolute w-full h-full animate-[spin_6s_linear_infinite_reverse]">
+                 <div className="absolute bottom-4 right-0 w-3 h-5 bg-purple-300 clip-path-polygon shadow-[0_0_10px_white]" style={{ clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)' }}></div>
+             </div>
+             
+             {/* Base Energy */}
+             <div className="absolute bottom-0 w-16 h-4 bg-cyan-500 rounded-[100%] blur-sm opacity-60 animate-pulse"></div>
+        </div>
+    );
 };
 
 // New Statue Component
@@ -216,9 +228,8 @@ export const Castle: React.FC<CastleProps> = ({ health, maxHealth, isShaking, st
         
         {/* Wizard Crystal Decoration - Placed on Back Tower Right */}
         {style.decorations.includes('crystal') && (
-            <div className="absolute bottom-[160px] md:bottom-[200px] -right-2 md:-right-4 z-40 animate-[bounce_4s_infinite]">
-                 <div className="w-10 h-14 bg-cyan-400 rotate-45 border-2 border-white opacity-90 shadow-[0_0_25px_cyan]"></div>
-                 <div className="absolute inset-0 w-10 h-14 bg-cyan-200 rotate-45 border-2 border-white opacity-60 blur-md animate-pulse"></div>
+            <div className="absolute bottom-[160px] md:bottom-[200px] -right-8 md:-right-10 z-40 scale-75 md:scale-90">
+                 <CrystalVisual />
             </div>
         )}
 
@@ -300,9 +311,11 @@ export const Castle: React.FC<CastleProps> = ({ health, maxHealth, isShaking, st
               </div>
            )}
 
-           {/* Pet Dragon - MOVED HERE (Top of Central Keep) */}
+           {/* Pet Dragon - IMPROVED VISUAL */}
            {style.decorations.includes('dragon') && (
-              <PixelDragon />
+              <div className="absolute -top-24 left-1/2 -translate-x-1/2 z-50 scale-75 origin-bottom">
+                  <DragonVisual />
+              </div>
            )}
 
            <div className="absolute top-6 md:top-8 text-slate-900/20 scale-75 md:scale-100">

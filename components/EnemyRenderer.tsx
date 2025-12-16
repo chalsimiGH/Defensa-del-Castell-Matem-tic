@@ -2,7 +2,7 @@
 import React from 'react';
 import { Enemy } from '../types';
 import { ENEMY_TYPES } from '../constants';
-import { Ghost, Skull, Swords, Bot, Shield, Droplets, Flame, Bird, Bone, Eye, Cloud, Zap } from 'lucide-react';
+import { Ghost, Shield, Swords, Bot, Droplets, Flame, Bird, Bone, Zap, Cloud } from 'lucide-react';
 
 interface EnemyRendererProps {
   enemies: Enemy[];
@@ -58,16 +58,13 @@ const RenderEnemyVisual = ({ type, color }: { type: string, color: string }) => 
         case 'dragon':
             return (
                 <div className="relative animate-wiggle" style={{ animationDuration: '3s' }}>
-                    {/* Wings simulated by Swords for now or structure */}
                     <div className="absolute -top-4 -left-4 -rotate-45 opacity-80">
                          <Flame size={40} className="text-red-500 fill-orange-500 scale-x-[-1]" />
                     </div>
                     <div className="absolute -top-4 -right-4 rotate-45 opacity-80">
                          <Flame size={40} className="text-red-500 fill-orange-500" />
                     </div>
-                    {/* Body */}
                     <Bird size={72} className={`${color} fill-red-900`} strokeWidth={2} />
-                    {/* Fire Breath */}
                     <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-2">
                         <Flame size={24} className="text-yellow-400 fill-yellow-200 animate-bounce" />
                     </div>
@@ -76,10 +73,13 @@ const RenderEnemyVisual = ({ type, color }: { type: string, color: string }) => 
         case 'skeleton':
             return (
                 <div className="relative">
-                    <Skull size={56} className="text-slate-200 fill-slate-800 drop-shadow-xl" strokeWidth={1.5} />
-                    {/* Glowing Eyes */}
-                    <div className="absolute top-5 left-3 w-3 h-3 bg-cyan-400 rounded-full shadow-[0_0_8px_cyan]" />
-                    <div className="absolute top-5 right-3 w-3 h-3 bg-cyan-400 rounded-full shadow-[0_0_8px_cyan]" />
+                    <div className="relative z-10">
+                        <div className="w-14 h-14 bg-slate-200 rounded-full border-2 border-slate-300 flex items-center justify-center shadow-lg">
+                           <div className="absolute top-4 left-3 w-3 h-3 bg-cyan-400 rounded-full shadow-[0_0_8px_cyan]"></div>
+                           <div className="absolute top-4 right-3 w-3 h-3 bg-cyan-400 rounded-full shadow-[0_0_8px_cyan]"></div>
+                           <div className="absolute bottom-3 w-6 h-1 bg-slate-400 rounded-full"></div>
+                        </div>
+                    </div>
                     {/* Crossed Bones */}
                     <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 flex">
                         <Bone size={24} className="text-slate-300 rotate-45" />
@@ -110,39 +110,47 @@ const RenderEnemyVisual = ({ type, color }: { type: string, color: string }) => 
             );
         case 'boss':
             return (
-                <div className="relative animate-[float-slow_4s_ease-in-out_infinite]">
+                <div className="relative">
                     {/* Aura */}
                     <div className="absolute inset-0 bg-purple-600/30 blur-xl rounded-full animate-pulse"></div>
                     
-                    {/* Main Head */}
-                    <div className="relative z-10">
-                        <Skull size={80} className="text-gray-200 fill-black drop-shadow-[0_0_15px_rgba(147,51,234,0.8)]" strokeWidth={1.5} />
-                        {/* Scary Eyes */}
-                        <div className="absolute top-7 left-4 w-4 h-4 bg-red-600 rounded-full shadow-[0_0_10px_red] animate-pulse">
-                            <div className="w-1 h-2 bg-black absolute top-1 left-1.5 rounded-full"></div>
+                    {/* Main Head (No animation here, handled by parent) */}
+                    <div className="relative z-10 scale-110">
+                        {/* Custom Skull Construction for better look */}
+                        <div className="w-20 h-24 bg-gray-200 rounded-t-3xl rounded-b-xl border-4 border-gray-300 shadow-2xl relative overflow-hidden">
+                             {/* Eyes */}
+                             <div className="absolute top-8 left-3 w-5 h-6 bg-black rounded-full rotate-12">
+                                <div className="absolute top-1 right-1 w-2 h-2 bg-red-600 rounded-full animate-pulse shadow-[0_0_8px_red]"></div>
+                             </div>
+                             <div className="absolute top-8 right-3 w-5 h-6 bg-black rounded-full -rotate-12">
+                                <div className="absolute top-1 left-1 w-2 h-2 bg-red-600 rounded-full animate-pulse shadow-[0_0_8px_red]"></div>
+                             </div>
+                             {/* Nose */}
+                             <div className="absolute top-16 left-1/2 -translate-x-1/2 w-3 h-4 bg-black/80 rounded-full"></div>
+                             {/* Teeth */}
+                             <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
+                                 <div className="w-2 h-3 bg-yellow-100 border border-gray-400 rounded-sm"></div>
+                                 <div className="w-2 h-3 bg-yellow-100 border border-gray-400 rounded-sm"></div>
+                                 <div className="w-2 h-3 bg-yellow-100 border border-gray-400 rounded-sm"></div>
+                             </div>
                         </div>
-                        <div className="absolute top-7 right-4 w-4 h-4 bg-red-600 rounded-full shadow-[0_0_10px_red] animate-pulse">
-                            <div className="w-1 h-2 bg-black absolute top-1 left-1.5 rounded-full"></div>
-                        </div>
+
                         {/* Horns */}
-                        <div className="absolute -top-6 -left-2 rotate-[-20deg]">
-                            <Zap size={30} className="text-purple-400 fill-purple-900" />
+                        <div className="absolute -top-8 -left-6 rotate-[-25deg]">
+                            <Zap size={40} className="text-purple-500 fill-purple-900 drop-shadow-lg" />
                         </div>
-                        <div className="absolute -top-6 -right-2 rotate-[20deg] scale-x-[-1]">
-                            <Zap size={30} className="text-purple-400 fill-purple-900" />
+                        <div className="absolute -top-8 -right-6 rotate-[25deg] scale-x-[-1]">
+                            <Zap size={40} className="text-purple-500 fill-purple-900 drop-shadow-lg" />
                         </div>
                     </div>
 
                     {/* Flames around */}
-                    <div className="absolute -bottom-4 -left-6 z-0 animate-bounce delay-100">
-                        <Flame size={40} className="text-purple-600 fill-black" />
+                    <div className="absolute -bottom-6 -left-8 z-0 animate-bounce delay-100">
+                        <Flame size={48} className="text-purple-600 fill-black" />
                     </div>
-                    <div className="absolute -bottom-4 -right-6 z-0 animate-bounce delay-300">
-                        <Flame size={40} className="text-purple-600 fill-black" />
+                    <div className="absolute -bottom-6 -right-8 z-0 animate-bounce delay-300">
+                        <Flame size={48} className="text-purple-600 fill-black" />
                     </div>
-                    
-                    {/* Glitchy Effect Lines */}
-                    <div className="absolute top-1/2 left-0 w-full h-0.5 bg-red-500 opacity-0 animate-[ping_2s_infinite]"></div>
                 </div>
             );
         default:
@@ -164,7 +172,11 @@ export const EnemyRenderer: React.FC<EnemyRendererProps> = ({ enemies }) => {
         return (
           <div
             key={enemy.id}
-            className="absolute flex flex-col items-center transition-transform duration-100 ease-linear"
+            // IMPORTANT: If Boss, apply the floating animation HERE so the number moves with the body
+            className={`
+                absolute flex flex-col items-center transition-transform duration-100 ease-linear
+                ${isBoss ? 'animate-[bounce_3s_infinite]' : ''}
+            `}
             style={{ 
               left: `${pos.left}%`,
               bottom: `${pos.bottom}%`,
@@ -174,20 +186,20 @@ export const EnemyRenderer: React.FC<EnemyRendererProps> = ({ enemies }) => {
           >
             {/* Boss Hits Remaining Indicator */}
             {isBoss && enemy.hitsRemaining && (
-                <div className="flex gap-1 mb-2 absolute -top-12">
+                <div className="flex gap-1 mb-3 absolute -top-16 z-30 bg-black/50 p-1 rounded-full">
                     {[...Array(5)].map((_, i) => (
                         <div 
                             key={i} 
-                            className={`w-3 h-3 rounded-full border border-black ${i < enemy.hitsRemaining! ? 'bg-red-500 shadow-[0_0_5px_red]' : 'bg-gray-800'}`}
+                            className={`w-3 h-3 rounded-full border border-black shadow-sm ${i < enemy.hitsRemaining! ? 'bg-red-500 shadow-[0_0_5px_red]' : 'bg-gray-700'}`}
                         ></div>
                     ))}
                 </div>
             )}
 
             {/* Target Value Bubble */}
-            <div className={`relative mb-1 ${isDying ? 'hidden' : ''} z-20`}>
+            <div className={`relative mb-2 ${isDying ? 'hidden' : ''} z-30`}>
                 <div className={`absolute inset-0 rounded-full animate-ping opacity-20 ${isBoss ? 'bg-purple-500' : 'bg-red-500'}`}></div>
-                <div className={`${isBoss ? 'bg-purple-950 border-purple-500 text-white' : 'bg-white border-red-800 text-slate-900'} border-2 rounded-full min-w-[32px] h-8 px-2 flex items-center justify-center font-black text-lg shadow-md`}>
+                <div className={`${isBoss ? 'bg-purple-950 border-purple-400 text-purple-100 shadow-[0_0_15px_rgba(168,85,247,0.6)]' : 'bg-white border-red-800 text-slate-900'} border-2 rounded-full min-w-[32px] h-8 px-2 flex items-center justify-center font-black text-lg shadow-lg`}>
                    {enemy.value}
                 </div>
             </div>

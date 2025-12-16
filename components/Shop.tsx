@@ -1,8 +1,9 @@
 
 import React from 'react';
-import { X, Check, Lock, ShoppingBag, Flag, Flame, Flower, Shield, Bird, Ban, Bomb, Bookmark, Hexagon, Triangle, Eye, Heart } from 'lucide-react';
+import { X, Check, Lock, ShoppingBag, Flag, Flame, Flower, Shield, Ban, Bomb, Bookmark, Triangle, Eye, Heart } from 'lucide-react';
 import { SHOP_ITEMS } from '../constants';
 import { CastleStyle, ShopItem } from '../types';
+import { DragonVisual, CrystalVisual } from './Castle';
 
 interface ShopProps {
   currency: number;
@@ -65,13 +66,15 @@ export const Shop: React.FC<ShopProps> = ({
           case 'torches': return <Flame size={52} className="text-orange-500 fill-yellow-500 animate-pulse" />;
           case 'statues': return <Shield size={52} className="text-slate-400 fill-slate-300" />;
           case 'cannons': return <div className="relative"><Bomb size={48} className="text-slate-900 fill-slate-800" /><div className="absolute -bottom-1 w-full h-1 bg-black rounded-full blur-sm"></div></div>;
-          case 'dragon': return <Bird size={64} className="text-red-600 fill-orange-500" strokeWidth={1.5} />;
+          
+          // Use imported High-Quality Visuals
+          case 'dragon': return <div className="scale-75 origin-center"><DragonVisual /></div>;
+          case 'crystal': return <div className="scale-75 origin-center"><CrystalVisual /></div>;
           
           // New Items Preview
           case 'banners': return <div className="flex gap-2"><Bookmark size={40} className="text-red-600 fill-red-600" /><Bookmark size={40} className="text-red-600 fill-red-600" /></div>;
           case 'spikes': return <div className="flex gap-[-4px]"><Triangle size={32} className="text-slate-400 fill-slate-600" /><Triangle size={32} className="text-slate-400 fill-slate-600" /><Triangle size={32} className="text-slate-400 fill-slate-600" /></div>;
           case 'gators': return <div className="bg-blue-400/30 p-2 rounded-full"><Eye size={32} className="text-green-600 fill-green-400" /></div>;
-          case 'crystal': return <Hexagon size={48} className="text-cyan-400 fill-cyan-200 animate-bounce" />;
           
           default: return <span className="text-4xl">✨</span>;
         }
