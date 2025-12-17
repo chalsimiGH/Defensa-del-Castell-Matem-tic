@@ -8,7 +8,7 @@ import { Shop } from './components/Shop';
 import { GameState, Enemy, EquationItem, Operator, ShopItem, EnemyType, LeaderboardEntry } from './types';
 import { INITIAL_HEALTH, getDifficultyConfig, ENEMY_TYPES } from './constants';
 import { evaluateEquation, generateTargetNumber } from './utils/mathEngine';
-import { Trophy, RotateCcw, ShoppingBag, ArrowRight, Star, Volume2, VolumeX, Music, Skull, Heart, Save, List, Loader2, Globe, WifiOff } from 'lucide-react';
+import { Trophy, RotateCcw, ShoppingBag, ArrowRight, Star, Volume2, VolumeX, Music, Skull, Heart, Save, List, Loader2, Globe, WifiOff, Wind } from 'lucide-react';
 import { db } from './firebaseConfig';
 import { collection, addDoc, getDocs, query, orderBy, limit } from 'firebase/firestore';
 
@@ -108,6 +108,7 @@ export default function App() {
   const [isAttacking, setIsAttacking] = useState(false);
   const [feedbackEffect, setFeedbackEffect] = useState<{ x: number, text: string, type: 'hit' | 'miss' } | null>(null);
   const [inkEffect, setInkEffect] = useState(false);
+  const [tornadoActive, setTornadoActive] = useState(false);
   
   // Audio State
   const [isMusicMuted, setIsMusicMuted] = useState(false);
@@ -265,6 +266,7 @@ export default function App() {
   const animationFrameRef = useRef<number>(0);
   const nextSpawnTimeRef = useRef<number>(0);
   const lastBossAttackRef = useRef<number>(0); // Timer for Boss Attacks
+  const lastTornadoRef = useRef<number>(0); // Timer for Tornado Magic
 
   // --- AUDIO LOGIC (Web Audio API) ---
   const musicIntervalRef = useRef<number | null>(null);
@@ -312,6 +314,30 @@ export default function App() {
          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
          osc.start();
          osc.stop(ctx.currentTime + 0.3);
+     } catch(e) {}
+  };
+
+  const playWindSound = () => {
+     if (isSfxMuted) return;
+     try {
+         const Ctx = window.AudioContext || (window as any).webkitAudioContext;
+         if (!Ctx) return;
+         const ctx = audioContextRef.current || new Ctx();
+         const osc = ctx.createOscillator();
+         const gain = ctx.createGain();
+         osc.connect(gain);
+         gain.connect(ctx.destination);
+         osc.type = 'sawtooth';
+         // Low frequency sweep for wind
+         osc.frequency.setValueAtTime(100, ctx.currentTime);
+         osc.frequency.linearRampToValueAtTime(200, ctx.currentTime + 0.5);
+         osc.frequency.linearRampToValueAtTime(50, ctx.currentTime + 2.0);
+         
+         gain.gain.setValueAtTime(0.1, ctx.currentTime);
+         gain.gain.linearRampToValueAtTime(0.0, ctx.currentTime + 2.0);
+         
+         osc.start();
+         osc.stop(ctx.currentTime + 2.0);
      } catch(e) {}
   };
 
@@ -379,6 +405,7 @@ export default function App() {
     setGameState(prev => ({ ...prev, phase: 'shop' }));
     // Do NOT clear enemies to preserve Boss state
     setInkEffect(false);
+    setTornadoActive(false);
   };
 
   const closeShop = () => {
@@ -388,6 +415,7 @@ export default function App() {
     // Reset time trackers to prevent frame jumps or instant attacks upon resuming
     lastUpdateRef.current = performance.now();
     lastBossAttackRef.current = performance.now();
+    lastTornadoRef.current = performance.now();
 
     if (gameState.enemiesDefeated >= enemiesTarget) {
         setGameState(prev => ({ ...prev, phase: 'level_complete' }));
@@ -408,6 +436,7 @@ export default function App() {
     setEquation([]);
     setEvaluatedResult(null);
     setInkEffect(false);
+    setTornadoActive(false);
     lastUpdateRef.current = performance.now();
     nextSpawnTimeRef.current = performance.now() + 2000;
   };
@@ -428,6 +457,7 @@ export default function App() {
     setEquation([]);
     setEvaluatedResult(null);
     setInkEffect(false);
+    setTornadoActive(false);
     setScoreSaved(false); // Reset saved status
     setPlayerName(''); // Reset name
     lastUpdateRef.current = performance.now();
@@ -681,6 +711,8 @@ export default function App() {
            nextSpawnTimeRef.current = timestamp + 999999;
            // Reset boss attack timer
            lastBossAttackRef.current = timestamp;
+           // Reset tornado timer
+           lastTornadoRef.current = timestamp;
        } else {
            // Normal Spawn
             const newVal = generateTargetNumber(difficulty.numberRange.min, difficulty.numberRange.max);
@@ -701,7 +733,7 @@ export default function App() {
        }
     }
 
-    // 2. Boss Mechanics (Ink & Attack)
+    // 2. Boss Mechanics (Ink & Attack & Tornado)
     if (isBossLevel) {
         const boss = enemies.find(e => e.type === 'boss' && e.status !== 'dying');
         
@@ -711,6 +743,23 @@ export default function App() {
                 playInkSound();
                 setInkEffect(true);
                 setTimeout(() => setInkEffect(false), 4000);
+            }
+
+            // TORNADO MAGIC (Only on Levels divisible by 10)
+            if (gameState.level % 10 === 0) {
+                 const timeSinceTornado = timestamp - lastTornadoRef.current;
+                 // Trigger if time > 10s OR Random chance (approx 0.5%) if time > 2s
+                 if (!tornadoActive && (timeSinceTornado > 10000 || (timeSinceTornado > 2000 && Math.random() < 0.005))) {
+                     setTornadoActive(true);
+                     playWindSound();
+                     setFeedbackEffect({ x: 50, text: '🌪️ TORNADO!', type: 'miss' });
+                     setTimeout(() => setFeedbackEffect(null), 1500);
+
+                     setTimeout(() => {
+                         setTornadoActive(false);
+                         lastTornadoRef.current = performance.now(); // Reset interval
+                     }, 3000); // Lasts 3 seconds
+                 }
             }
 
             // ATTACK: Every 5 seconds
@@ -795,7 +844,7 @@ export default function App() {
     });
 
     animationFrameRef.current = requestAnimationFrame(loop);
-  }, [gameState.phase, gameState.health, gameState.level, difficulty, enemies, gameState.enemiesDefeated, inkEffect]);
+  }, [gameState.phase, gameState.health, gameState.level, difficulty, enemies, gameState.enemiesDefeated, inkEffect, tornadoActive]);
 
   useEffect(() => {
     if (gameState.phase === 'playing') {
@@ -938,6 +987,13 @@ export default function App() {
                 {feedbackEffect.text}
               </div>
             )}
+
+            {/* Tornado Visual Overlay on Castle Area */}
+            {tornadoActive && (
+                <div className="absolute inset-0 pointer-events-none z-40 flex items-center justify-center">
+                    <Wind size={200} className="text-white opacity-50 animate-spin-slow" />
+                </div>
+            )}
         </div>
 
         {/* Inputs / Control Panel Container */}
@@ -952,6 +1008,7 @@ export default function App() {
                 onBackspace={handleBackspace}
                 onClear={handleClear}
                 onAttack={handleAttack}
+                isScrambled={tornadoActive} // PASSING THE PROP
             />
         </div>
 

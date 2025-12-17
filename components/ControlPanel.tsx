@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { useMemo } from 'react';
 import { Operator, EquationItem } from '../types';
 import { Delete, Eraser, Swords } from 'lucide-react';
 
@@ -12,6 +13,7 @@ interface ControlPanelProps {
   onClear: () => void;
   onAttack: () => void;
   evaluatedResult: number | null;
+  isScrambled?: boolean; // New prop for Tornado effect
 }
 
 export const ControlPanel: React.FC<ControlPanelProps> = ({
@@ -23,12 +25,36 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
   onBackspace,
   onClear,
   onAttack,
-  evaluatedResult
+  evaluatedResult,
+  isScrambled = false
 }) => {
+  
+  // Scramble Logic: Only shuffle when `isScrambled` changes to true.
+  const displayedNumbers = useMemo(() => {
+    if (isScrambled) {
+        return [...availableButtons].sort(() => Math.random() - 0.5);
+    }
+    return availableButtons;
+  }, [availableButtons, isScrambled]);
+
+  const displayedOperators = useMemo(() => {
+    if (isScrambled) {
+        return [...allowedOperators].sort(() => Math.random() - 0.5);
+    }
+    return allowedOperators;
+  }, [allowedOperators, isScrambled]);
+
   return (
     // Landscape styles: Remove rounded-t, full height, different padding, remove safe-area-bottom (handled by sidebar)
     // Portrait styles: Maintain existing bottom bar look
-    <div className="w-full bg-slate-900 pt-1 pb-2 px-2 md:p-3 md:pb-4 rounded-t-2xl md:rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.8)] border-t-4 md:border-t-8 border-slate-700 relative z-50 pb-[env(safe-area-inset-bottom)] landscape:h-full landscape:rounded-none landscape:border-t-0 landscape:pb-2 landscape:overflow-y-auto landscape:flex landscape:flex-col landscape:justify-center">
+    <div className={`
+        w-full bg-slate-900 pt-1 pb-2 px-2 md:p-3 md:pb-4 rounded-t-2xl md:rounded-t-3xl 
+        shadow-[0_-10px_40px_rgba(0,0,0,0.8)] border-t-4 md:border-t-8 border-slate-700 
+        relative z-50 pb-[env(safe-area-inset-bottom)] 
+        landscape:h-full landscape:rounded-none landscape:border-t-0 landscape:pb-2 landscape:overflow-y-auto landscape:flex landscape:flex-col landscape:justify-center
+        transition-colors duration-300
+        ${isScrambled ? 'border-purple-500 bg-slate-950' : ''}
+    `}>
       <div className="max-w-4xl mx-auto flex flex-col gap-2 md:gap-3 w-full">
         
         {/* Equation Display */}
@@ -70,15 +96,24 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
         </div>
 
         {/* Controls Area */}
-        <div className="flex flex-wrap gap-1 justify-center bg-slate-800 p-1.5 rounded-xl border border-slate-700 md:grid md:grid-cols-[1fr_auto] md:gap-3 md:bg-transparent md:p-0 md:border-0 landscape:flex landscape:bg-transparent landscape:border-0 landscape:p-0">
+        <div className={`
+            flex flex-wrap gap-1 justify-center bg-slate-800 p-1.5 rounded-xl border border-slate-700 
+            md:grid md:grid-cols-[1fr_auto] md:gap-3 md:bg-transparent md:p-0 md:border-0 
+            landscape:flex landscape:bg-transparent landscape:border-0 landscape:p-0
+            ${isScrambled ? 'animate-shake' : ''}
+        `}>
             
             {/* Number Pad Group */}
             <div className="contents md:flex md:flex-wrap md:gap-2 md:justify-start md:bg-slate-800 md:p-3 md:rounded-xl md:border-2 md:border-slate-700 landscape:flex landscape:gap-2 landscape:justify-center landscape:w-full">
-                {availableButtons.map((num) => (
+                {displayedNumbers.map((num) => (
                     <button
                         key={num}
                         onClick={() => onAddNumber(num)}
-                        className="h-10 w-10 md:h-14 md:w-14 bg-blue-500 hover:bg-blue-400 rounded-lg md:rounded-xl shadow-[0_3px_0_#1e40af] md:shadow-[0_4px_0_#1e40af] active:shadow-none active:translate-y-1 text-xl md:text-2xl font-black text-white transition-all border-b-2 md:border-b-4 border-blue-700"
+                        style={isScrambled ? { transform: `rotate(${Math.random() * 20 - 10}deg)` } : {}}
+                        className={`
+                            h-10 w-10 md:h-14 md:w-14 rounded-lg md:rounded-xl shadow-[0_3px_0_#1e40af] md:shadow-[0_4px_0_#1e40af] active:shadow-none active:translate-y-1 text-xl md:text-2xl font-black text-white transition-all border-b-2 md:border-b-4 border-blue-700
+                            ${isScrambled ? 'bg-purple-600 hover:bg-purple-500' : 'bg-blue-500 hover:bg-blue-400'}
+                        `}
                     >
                         {num}
                     </button>
@@ -90,11 +125,15 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
 
             {/* Operators & Actions Group */}
             <div className="contents md:flex md:flex-wrap md:gap-2 md:justify-center md:bg-slate-800 md:p-3 md:rounded-xl md:border-2 md:border-slate-700 landscape:flex landscape:gap-2 landscape:justify-center landscape:w-full landscape:mt-2">
-                 {allowedOperators.map((op) => (
+                 {displayedOperators.map((op) => (
                     <button
                         key={op}
                         onClick={() => onAddOperator(op)}
-                        className="h-10 w-10 md:h-14 md:w-14 bg-amber-500 hover:bg-amber-400 rounded-lg md:rounded-xl shadow-[0_3px_0_#92400e] md:shadow-[0_4px_0_#92400e] active:shadow-none active:translate-y-1 text-xl md:text-3xl font-black text-white transition-all border-b-2 md:border-b-4 border-amber-700"
+                        style={isScrambled ? { transform: `rotate(${Math.random() * 20 - 10}deg)` } : {}}
+                        className={`
+                            h-10 w-10 md:h-14 md:w-14 rounded-lg md:rounded-xl shadow-[0_3px_0_#92400e] md:shadow-[0_4px_0_#92400e] active:shadow-none active:translate-y-1 text-xl md:text-3xl font-black text-white transition-all border-b-2 md:border-b-4 border-amber-700
+                            ${isScrambled ? 'bg-purple-600 hover:bg-purple-500' : 'bg-amber-500 hover:bg-amber-400'}
+                        `}
                     >
                         {op}
                     </button>
